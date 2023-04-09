@@ -1,0 +1,45 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "declaration": true,
+    "noImplicitThis": true,
+    "target": "ES2020",
+    "module": "esnext",
+    "moduleResolution": "Node",
+    "useDefineForClassFields": false, // breaks eosio-core
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": false,
+    "noImplicitReturns": true,
+    "allowUnreachableCode": true,
+    "noUncheckedIndexedAccess": true,
+    "strictFunctionTypes": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "baseUrl": "src",
+    "paths": {
+      "lib/*": [
+        "lib/*"
+      ]
+    },
+    "types": [
+      "node"
+    ],
+    "allowJs": false,
+    "checkJs": false,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist/**/*"
+  ],
+  "include": [
+    "src/**/*"
+  ]
+}

@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model LogAddPoints {
+  sequence  BigInt   @unique
+  trxId     String
+  timeStamp DateTime
+
+  account          String
+  added_fah_points Int
+  base_payout      Float
+  stake_bonus      Float
+
+  @@index([account, timeStamp])
+  @@index([timeStamp])
+}
+
+model InitUnstake {
+  sequence  BigInt   @unique
+  trxId     String
+  timeStamp DateTime
+
+  account  String
+  quantity Float
+
+  @@index([account, timeStamp])
+  @@index([timeStamp])
+}
+
+model ClaimUnstake {
+  sequence  BigInt   @unique
+  trxId     String
+  timeStamp DateTime
+
+  account String
+
+  @@index([account, timeStamp])
+  @@index([timeStamp])
+}
+
+model Claim {
+  sequence  BigInt   @unique
+  trxId     String
+  timeStamp DateTime
+
+  account String
+
+  @@index([account, timeStamp])
+  @@index([timeStamp])
+}
