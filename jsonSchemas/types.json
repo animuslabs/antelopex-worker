@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "eosioConfig": {
+      "type": "object",
+      "properties": {
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "proofSockets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "firehoseSockets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "worker": {
+          "type": "object",
+          "properties": {
+            "account": {
+              "$ref": "#/definitions/NameType"
+            },
+            "permission": {
+              "$ref": "#/definitions/NameType"
+            },
+            "key": {
+              "$ref": "#/definitions/PrivateKey"
+            }
+          },
+          "required": [
+            "account",
+            "permission",
+            "key"
+          ]
+        },
+        "contracts": {
+          "type": "object",
+          "properties": {
+            "system": {
+              "$ref": "#/definitions/NameType"
+            },
+            "bridge": {
+              "$ref": "#/definitions/NameType"
+            }
+          },
+          "required": [
+            "system",
+            "bridge"
+          ]
+        },
+        "proxy": {
+          "type": "object",
+          "properties": {
+            "maintainerEmail": {
+              "type": "string",
+              "format": "email"
+            },
+            "proxies": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "external": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "internal": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "external",
+                  "internal"
+                ]
+              }
+            }
+          },
+          "required": [
+            "maintainerEmail",
+            "proxies"
+          ]
+        },
+        "relayer": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "port"
+          ]
+        },
+        "history": {
+          "type": "object",
+          "properties": {
+            "hyperion": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "injestChunkSize": {
+              "type": "integer"
+            },
+            "keepHistoryDataDays": {
+              "type": "integer"
+            },
+            "injestLoopDelaySec": {
+              "type": "integer"
+            },
+            "port": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "hyperion",
+            "injestChunkSize",
+            "keepHistoryDataDays",
+            "injestLoopDelaySec",
+            "port"
+          ]
+        }
+      },
+      "required": [
+        "endpoints",
+        "proofSockets",
+        "firehoseSockets",
+        "worker",
+        "contracts"
+      ]
+    },
+    "NameType": {
+      "type": "string"
+    },
+    "PrivateKey": {
+      "type": "string"
+    }
+  }
+}

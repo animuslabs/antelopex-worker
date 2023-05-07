@@ -1,4 +1,4 @@
-.env.json
+.env*
 .DS_Store
 prisma/dev.db
 prisma/client/

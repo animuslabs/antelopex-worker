@@ -14,6 +14,7 @@ const colors = {
 prefix.reg(log)
 prefix.apply(log, {
   format(level, name, timestamp) {
+    //@ts-ignore
     return `${chalk.gray(`[${timestamp}]`)} ${name} ${colors[level.toUpperCase()](level)}:`
   }
 })
@@ -31,6 +32,6 @@ if (envLogLevel) {
   const valid = levels.includes(envLogLevel.toUpperCase())
   if (!valid) throw new Error("invalid env LOGLEVEL! Valid values are: " + levels + " default is INFO")
   log.setLevel(envLogLevel.toUpperCase() as any)
-} else log.setLevel("INFO")
+} else log.setLevel("DEBUG")
 log.info("logging level set to:", log.getLevel())
 export default log

@@ -1,13 +1,17 @@
 import { Action } from "@greymass/eosio"
-import { sendAction } from "lib/eosio"
+import { ChainClient } from "lib/eosio"
 import logger from "lib/logger"
+import { ChainKey } from "lib/types/ibc.types"
 import { sleep } from "lib/utils"
 const log = logger.getLogger("ActionPusher")
 
 export class ActionPusher {
-  constructor(intervalms:number = 1000) {
+  constructor(chainName:ChainKey, intervalms:number = 1000) {
     this.timer = setInterval(() => this.pushTrx(), intervalms)
+    this.client = new ChainClient(chainName)
   }
+
+  client:ChainClient
 
   async stop() {
     log.debug("stopping pusher")
@@ -30,7 +34,7 @@ export class ActionPusher {
     // log.debug("queue:", this)
     const act = this.queue.shift()
     if (!act) return
-    const result = await sendAction(act)
+    const result = await this.client.sendAction(act)
     log.debug("pushTrx result:", result)
     if (result?.receipts.length == 0) {
       log.error("Transaction Error:", result.errors)
