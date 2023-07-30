@@ -21,7 +21,7 @@ const eosioProto = loadProto("dfuse/eosio/codec/v1/codec.proto")
 const eosioBlockMsg = eosioProto.root.lookupType("dfuse.eosio.codec.v1.Block")
 // ["STEP_IRREVERSIBLE"]
 
-interface GetBlockQuery {
+export interface GetBlockQuery {
   firehoseOptions:{
     start_block_num:number
     stop_block_num:number,

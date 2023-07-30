@@ -23,6 +23,12 @@ export function shuffle<T>(array:T[]) {
   return array
 }
 
+export function throwErr(...messages:any[]):never {
+  const errorMessage = messages.join(" ")
+  throw new Error(errorMessage)
+}
+
+
 export async function accountExists(chain:ChainKey, name:string) {
   const validRegex = /(^[a-z1-5.]{0,11}[a-z1-5]$)|(^[a-z1-5.]{12}[a-j1-5]$)/
   if (typeof name !== "string") return false

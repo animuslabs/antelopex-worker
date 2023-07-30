@@ -9,6 +9,7 @@ type FahApiData = {
   rank:number|null
   score:number
   wus:number
+  nice?:number
 }
 
 export const fah = {
@@ -20,7 +21,8 @@ export const fah = {
         id: el[1] as unknown as number,
         rank: el[2] as unknown as number,
         score: el[3] as unknown as number,
-        wus: el[4] as unknown as number
+        wus: el[4] as unknown as number,
+        nice: 4
       }
       return apiData
     })

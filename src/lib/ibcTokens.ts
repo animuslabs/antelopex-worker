@@ -3,8 +3,9 @@ import { IbcSymbols, IbcToken } from "lib/types/ibc.types"
 
 export const ibcSymbols = ["EOS", "TLOS", "WAX", "UX", "UTXRAM"] as const
 
+export type IBCTokens = Record<IbcSymbols, IbcToken>
 
-export const ibcTokens:Record<IbcSymbols, IbcToken> = {
+export const ibcTokens:IBCTokens = {
   EOS: {
     nativeChain: "eos",
     precision: 4,

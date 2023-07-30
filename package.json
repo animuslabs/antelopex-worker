@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "tsc && tsc-alias -f",
-    "dev": "nodemon -w ./src -e .ts --exec \"yarn build || exit 1\"",
+    "build": "tsc-watch -b --onSuccess 'tsc-alias -f'",
+    "dev": "tsc-watch --onSuccess 'tsc-alias -f'",
     "db:reset": "prisma db push --force-reset",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint ./src --ext .ts --fix",
@@ -27,7 +27,7 @@
     "eslint-plugin-promise": "^6.0.0",
     "nodemon": "^2.0.19",
     "prisma": "^4.11.0",
-    "tsc-alias": "^1.7.0",
+    "tsc-alias": "^1.8.6",
     "typescript": "^5.0.4"
   },
   "dependencies": {
@@ -68,6 +68,7 @@
     "protobufjs": "^7.2.3",
     "tozod": "^3.0.0",
     "trpc-openapi": "^1.1.0",
+    "tsc-watch": "^6.0.4",
     "uint8arraylist": "2.4.3",
     "ws": "^8.13.0",
     "zod": "^3.21.4"

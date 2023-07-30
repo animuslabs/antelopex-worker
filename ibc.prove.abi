@@ -1,0 +1,754 @@
+{
+	"account_name": "ibc.prove",
+	"abi": {
+		"version": "eosio::abi/1.1",
+		"types": [
+			{
+				"new_type_name": "block_signing_authority",
+				"type": "variant_block_signing_authority_v0"
+			}
+		],
+		"structs": [
+			{
+				"name": "action",
+				"base": "",
+				"fields": [
+					{
+						"name": "account",
+						"type": "name"
+					},
+					{
+						"name": "name",
+						"type": "name"
+					},
+					{
+						"name": "authorization",
+						"type": "permission_level[]"
+					},
+					{
+						"name": "data",
+						"type": "bytes"
+					}
+				]
+			},
+			{
+				"name": "actionproof",
+				"base": "",
+				"fields": [
+					{
+						"name": "action",
+						"type": "action"
+					},
+					{
+						"name": "receipt",
+						"type": "actreceipt"
+					},
+					{
+						"name": "returnvalue",
+						"type": "bytes"
+					},
+					{
+						"name": "amproofpath",
+						"type": "checksum256[]"
+					}
+				]
+			},
+			{
+				"name": "actreceipt",
+				"base": "",
+				"fields": [
+					{
+						"name": "receiver",
+						"type": "name"
+					},
+					{
+						"name": "act_digest",
+						"type": "checksum256"
+					},
+					{
+						"name": "global_sequence",
+						"type": "uint64"
+					},
+					{
+						"name": "recv_sequence",
+						"type": "uint64"
+					},
+					{
+						"name": "auth_sequence",
+						"type": "authseq[]"
+					},
+					{
+						"name": "code_sequence",
+						"type": "varuint32"
+					},
+					{
+						"name": "abi_sequence",
+						"type": "varuint32"
+					}
+				]
+			},
+			{
+				"name": "anchorblock",
+				"base": "",
+				"fields": [
+					{
+						"name": "block",
+						"type": "sblockheader"
+					},
+					{
+						"name": "active_nodes",
+						"type": "uint16[]"
+					},
+					{
+						"name": "node_count",
+						"type": "uint64"
+					}
+				]
+			},
+			{
+				"name": "authseq",
+				"base": "",
+				"fields": [
+					{
+						"name": "account",
+						"type": "name"
+					},
+					{
+						"name": "sequence",
+						"type": "uint64"
+					}
+				]
+			},
+			{
+				"name": "block_signing_authority_v0",
+				"base": "",
+				"fields": [
+					{
+						"name": "threshold",
+						"type": "uint32"
+					},
+					{
+						"name": "keys",
+						"type": "key_weight[]"
+					}
+				]
+			},
+			{
+				"name": "blockheader",
+				"base": "",
+				"fields": [
+					{
+						"name": "timestamp",
+						"type": "block_timestamp_type"
+					},
+					{
+						"name": "producer",
+						"type": "name"
+					},
+					{
+						"name": "confirmed",
+						"type": "uint16"
+					},
+					{
+						"name": "previous",
+						"type": "checksum256"
+					},
+					{
+						"name": "transaction_mroot",
+						"type": "checksum256"
+					},
+					{
+						"name": "action_mroot",
+						"type": "checksum256"
+					},
+					{
+						"name": "schedule_version",
+						"type": "uint32"
+					},
+					{
+						"name": "new_producers",
+						"type": "producer_schedule?"
+					},
+					{
+						"name": "header_extensions",
+						"type": "pair_uint16_bytes[]"
+					}
+				]
+			},
+			{
+				"name": "chain",
+				"base": "",
+				"fields": [
+					{
+						"name": "name",
+						"type": "name"
+					},
+					{
+						"name": "chain_id",
+						"type": "checksum256"
+					},
+					{
+						"name": "return_value_activated",
+						"type": "uint32"
+					},
+					{
+						"name": "enabled",
+						"type": "bool"
+					}
+				]
+			},
+			{
+				"name": "chainschedule",
+				"base": "",
+				"fields": [
+					{
+						"name": "version",
+						"type": "uint64"
+					},
+					{
+						"name": "producer_schedule_v1",
+						"type": "producer_schedule"
+					},
+					{
+						"name": "producer_schedule_v2",
+						"type": "schedulev2"
+					},
+					{
+						"name": "hash",
+						"type": "checksum256"
+					},
+					{
+						"name": "first_block",
+						"type": "uint32"
+					},
+					{
+						"name": "last_block",
+						"type": "uint32"
+					},
+					{
+						"name": "expiry",
+						"type": "time_point"
+					}
+				]
+			},
+			{
+				"name": "checkproofa",
+				"base": "",
+				"fields": [
+					{
+						"name": "contract",
+						"type": "name"
+					}
+				]
+			},
+			{
+				"name": "checkproofb",
+				"base": "",
+				"fields": [
+					{
+						"name": "contract",
+						"type": "name"
+					},
+					{
+						"name": "actionproof",
+						"type": "actionproof"
+					}
+				]
+			},
+			{
+				"name": "checkproofc",
+				"base": "",
+				"fields": [
+					{
+						"name": "contract",
+						"type": "name"
+					},
+					{
+						"name": "actionproof",
+						"type": "actionproof"
+					}
+				]
+			},
+			{
+				"name": "checkproofd",
+				"base": "",
+				"fields": [
+					{
+						"name": "blockproof",
+						"type": "heavyproof"
+					}
+				]
+			},
+			{
+				"name": "checkproofe",
+				"base": "",
+				"fields": [
+					{
+						"name": "blockproof",
+						"type": "heavyproof"
+					},
+					{
+						"name": "actionproof",
+						"type": "actionproof"
+					}
+				]
+			},
+			{
+				"name": "checkprooff",
+				"base": "",
+				"fields": [
+					{
+						"name": "blockproof",
+						"type": "lightproof"
+					},
+					{
+						"name": "actionproof",
+						"type": "actionproof"
+					}
+				]
+			},
+			{
+				"name": "disable",
+				"base": "",
+				"fields": [
+					{
+						"name": "chain_name",
+						"type": "name"
+					}
+				]
+			},
+			{
+				"name": "enable",
+				"base": "",
+				"fields": [
+					{
+						"name": "chain_name",
+						"type": "name"
+					}
+				]
+			},
+			{
+				"name": "heavyproof",
+				"base": "",
+				"fields": [
+					{
+						"name": "chain_id",
+						"type": "checksum256"
+					},
+					{
+						"name": "hashes",
+						"type": "checksum256[]"
+					},
+					{
+						"name": "blocktoprove",
+						"type": "anchorblock"
+					},
+					{
+						"name": "bftproof",
+						"type": "sblockheader[]"
+					}
+				]
+			},
+			{
+				"name": "hpstruct",
+				"base": "",
+				"fields": [
+					{
+						"name": "id",
+						"type": "uint64"
+					},
+					{
+						"name": "hp",
+						"type": "heavyproof"
+					}
+				]
+			},
+			{
+				"name": "inita",
+				"base": "",
+				"fields": [
+					{
+						"name": "chain_name",
+						"type": "name"
+					},
+					{
+						"name": "chain_id",
+						"type": "checksum256"
+					},
+					{
+						"name": "return_value_activated",
+						"type": "uint32"
+					},
+					{
+						"name": "initial_schedule",
+						"type": "producer_schedule"
+					}
+				]
+			},
+			{
+				"name": "initb",
+				"base": "",
+				"fields": [
+					{
+						"name": "chain_name",
+						"type": "name"
+					},
+					{
+						"name": "chain_id",
+						"type": "checksum256"
+					},
+					{
+						"name": "return_value_activated",
+						"type": "uint32"
+					},
+					{
+						"name": "initial_schedule",
+						"type": "schedulev2"
+					}
+				]
+			},
+			{
+				"name": "key_weight",
+				"base": "",
+				"fields": [
+					{
+						"name": "key",
+						"type": "public_key"
+					},
+					{
+						"name": "weight",
+						"type": "uint16"
+					}
+				]
+			},
+			{
+				"name": "lastproof",
+				"base": "",
+				"fields": [
+					{
+						"name": "id",
+						"type": "uint64"
+					},
+					{
+						"name": "block_height",
+						"type": "uint32"
+					},
+					{
+						"name": "block_merkle_root",
+						"type": "checksum256"
+					},
+					{
+						"name": "expiry",
+						"type": "time_point"
+					}
+				]
+			},
+			{
+				"name": "lightproof",
+				"base": "",
+				"fields": [
+					{
+						"name": "chain_id",
+						"type": "checksum256"
+					},
+					{
+						"name": "header",
+						"type": "blockheader"
+					},
+					{
+						"name": "root",
+						"type": "checksum256"
+					},
+					{
+						"name": "bmproofpath",
+						"type": "checksum256[]"
+					}
+				]
+			},
+			{
+				"name": "lpstruct",
+				"base": "",
+				"fields": [
+					{
+						"name": "id",
+						"type": "uint64"
+					},
+					{
+						"name": "lp",
+						"type": "lightproof"
+					}
+				]
+			},
+			{
+				"name": "pair_uint16_bytes",
+				"base": "",
+				"fields": [
+					{
+						"name": "first",
+						"type": "uint16"
+					},
+					{
+						"name": "second",
+						"type": "bytes"
+					}
+				]
+			},
+			{
+				"name": "permission_level",
+				"base": "",
+				"fields": [
+					{
+						"name": "actor",
+						"type": "name"
+					},
+					{
+						"name": "permission",
+						"type": "name"
+					}
+				]
+			},
+			{
+				"name": "producer_authority",
+				"base": "",
+				"fields": [
+					{
+						"name": "producer_name",
+						"type": "name"
+					},
+					{
+						"name": "authority",
+						"type": "block_signing_authority"
+					}
+				]
+			},
+			{
+				"name": "producer_key",
+				"base": "",
+				"fields": [
+					{
+						"name": "producer_name",
+						"type": "name"
+					},
+					{
+						"name": "block_signing_key",
+						"type": "public_key"
+					}
+				]
+			},
+			{
+				"name": "producer_schedule",
+				"base": "",
+				"fields": [
+					{
+						"name": "version",
+						"type": "uint32"
+					},
+					{
+						"name": "producers",
+						"type": "producer_key[]"
+					}
+				]
+			},
+			{
+				"name": "sblockheader",
+				"base": "",
+				"fields": [
+					{
+						"name": "header",
+						"type": "blockheader"
+					},
+					{
+						"name": "producer_signatures",
+						"type": "signature[]"
+					},
+					{
+						"name": "previous_bmroot",
+						"type": "checksum256"
+					},
+					{
+						"name": "bmproofpath",
+						"type": "uint16[]"
+					}
+				]
+			},
+			{
+				"name": "schedulev2",
+				"base": "",
+				"fields": [
+					{
+						"name": "version",
+						"type": "uint32"
+					},
+					{
+						"name": "producers",
+						"type": "producer_authority[]"
+					}
+				]
+			}
+		],
+		"actions": [
+			{
+				"name": "checkproofa",
+				"type": "checkproofa",
+				"ricardian_contract": ""
+			},
+			{
+				"name": "checkproofb",
+				"type": "checkproofb",
+				"ricardian_contract": ""
+			},
+			{
+				"name": "checkproofc",
+				"type": "checkproofc",
+				"ricardian_contract": ""
+			},
+			{
+				"name": "checkproofd",
+				"type": "checkproofd",
+				"ricardian_contract": ""
+			},
+			{
+				"name": "checkproofe",
+				"type": "checkproofe",
+				"ricardian_contract": ""
+			},
+			{
+				"name": "checkprooff",
+				"type": "checkprooff",
+				"ricardian_contract": ""
+			},
+			{
+				"name": "disable",
+				"type": "disable",
+				"ricardian_contract": ""
+			},
+			{
+				"name": "enable",
+				"type": "enable",
+				"ricardian_contract": ""
+			},
+			{
+				"name": "inita",
+				"type": "inita",
+				"ricardian_contract": ""
+			},
+			{
+				"name": "initb",
+				"type": "initb",
+				"ricardian_contract": ""
+			}
+		],
+		"tables": [
+			{
+				"name": "actionproof",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "actionproof"
+			},
+			{
+				"name": "actreceipt",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "actreceipt"
+			},
+			{
+				"name": "anchorblock",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "anchorblock"
+			},
+			{
+				"name": "authseq",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "authseq"
+			},
+			{
+				"name": "blockheader",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "blockheader"
+			},
+			{
+				"name": "chains",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "chain"
+			},
+			{
+				"name": "heavyproof",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "heavyproof"
+			},
+			{
+				"name": "hpstruct",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "hpstruct"
+			},
+			{
+				"name": "lastproofs",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "lastproof"
+			},
+			{
+				"name": "lightproof",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "lightproof"
+			},
+			{
+				"name": "lpstruct",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "lpstruct"
+			},
+			{
+				"name": "sblockheader",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "sblockheader"
+			},
+			{
+				"name": "schedules",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "chainschedule"
+			},
+			{
+				"name": "schedulev2",
+				"index_type": "i64",
+				"key_names": [],
+				"key_types": [],
+				"type": "schedulev2"
+			}
+		],
+		"ricardian_clauses": [],
+		"error_messages": [],
+		"abi_extensions": [],
+		"variants": [
+			{
+				"name": "variant_block_signing_authority_v0",
+				"types": [
+					"block_signing_authority_v0"
+				]
+			}
+		],
+		"action_results": []
+	}
+}

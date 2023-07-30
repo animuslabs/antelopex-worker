@@ -62,6 +62,8 @@ interface GetTableParams {
   contract?:NameType
 }
 
+export type ChainClients = Partial<Record<ChainKey, ChainClient>>
+
 
 export class ChainClient {
   constructor(chainName:ChainKey) {
