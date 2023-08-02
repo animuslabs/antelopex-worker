@@ -1,11 +1,31 @@
 import { Asset } from "@greymass/eosio"
 import { IbcSymbols, IbcToken } from "lib/types/ibc.types"
 
-export const ibcSymbols = ["EOS", "TLOS", "WAX", "UX", "UTXRAM"] as const
+export const ibcSymbols = ["EOS", "TLOS", "WAX", "UX", "UTXRAM", "BOID"] as const
 
 export type IBCTokens = Record<IbcSymbols, IbcToken>
 
 export const ibcTokens:IBCTokens = {
+  BOID: {
+    nativeChain: "eos",
+    precision: 4,
+    tokenContract: {
+      eos: "boidcomtoken",
+      telos: "ibc.wt.boid",
+      // ux: "ibc.wt.boid",
+      wax: "ibc.wt.boid"
+    },
+    foreignWraplockContract: {
+      telos: "ibc.wl.boid",
+      // ux: "ibc.wl.boid",
+      wax: "ibc.wl.boid"
+    },
+    nativeWraplockContract: {
+      telos: "ibc.wl.boid",
+      // ux: "ibc.wl.ux",
+      wax: "ibc.wl.boid"
+    }
+  },
   EOS: {
     nativeChain: "eos",
     precision: 4,

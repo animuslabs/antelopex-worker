@@ -70,8 +70,9 @@ export class HyperionClient {
       let result = await hyp.get_transaction(trxid)
       return result as GetTransaction<unknown>
     } catch (error:any) {
-      log.error(hyp.endpoint, "retry:", retry, JSON.stringify(error))
-      return this.getTrx(trxid, retry++)
+      log.error(hyp.endpoint, "retry:", retry, JSON.stringify(error, null, 2))
+      await sleep(ms("1s"))
+      return this.getTrx(trxid, retry += 1)
     }
   }
 

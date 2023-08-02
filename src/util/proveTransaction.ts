@@ -1,31 +1,34 @@
 import { Action, PermissionLevel } from "@greymass/eosio"
+import fs from "fs-extra"
 import { getChainClient } from "lib/eosio"
 import { getProof, getProofRequestData, getProveActionData } from "lib/ibcHelpers"
 import logger from "lib/logger"
-import { Issuea } from "lib/types/wraptoken.types"
+import { Issuea, Issueb } from "lib/types/wraptoken.types"
 const log = logger.getLogger("test")
 
-const txid = "1fe4be9b7190b64854257eb843d9b600062aca5245ba9211d8c1cfd56896cd59"
+const txid = "dea1959841a2b4930e978689294cf0233a6f109e235603fd11da6b7e29489700"
 const chains = {
-  from: getChainClient("telos"),
-  to: getChainClient("eos")
+  from: getChainClient("eos"),
+  to: getChainClient("telos")
 }
 
 try {
-  const data = await getProofRequestData(chains, txid, "emitxfer", "ibc.wl.eos")
-  // log.info(data)
+  const data = await getProofRequestData(chains, txid, "emitxfer", "wl.tlos.boid")
+  log.info(data)
 
   const proof = await getProof(chains.from, data)
-  // // console.log(proof)
-  // log.info("get action data")
+  // // // console.log(proof)
+  // // log.info("get action data")
   const actionData = await getProveActionData(chains.to, data, proof)
-  // log.info(actionData.data.actionproof.action)
+  log.info(actionData.data)
+  fs.writeJSONSync("../data.json", actionData.data, { spaces: 2 })
   const worker = chains.to.config.worker
   const act = Action.from({
-    account: "ibc.wt.tlos",
+    account: "wt.boid",
     name: "issuea",
     authorization: [PermissionLevel.from({ actor: worker.account, permission: worker.permission })],
     data: Issuea.from(actionData.data)
+    // data: Issueb.from(actionData.data)
   })
   const result = await chains.to.sendAction(act)
   log.info(result)

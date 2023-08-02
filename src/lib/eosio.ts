@@ -101,6 +101,7 @@ export class ChainClient {
 
   getProofSocket():string {
     const socket = this.config.proofSockets[rand(0, this.config.proofSockets.length - 1)]
+    log.info("using proof socket:", socket)
     if (!socket) throw new Error("No available proof services!!")
     return socket
   }
