@@ -9,6 +9,7 @@ export interface Chains {from:ChainClient, to:ChainClient}
 export interface ProofQuery {block_to_prove:number, last_proven_block?:number, action_receipt_digest?:number, type:string, action_receipt:ActionReceipt}
 export interface GetProofQuery { type:string, block_to_prove:number, action?:any, last_proven_block?:number, action_receipt_digest:any }
 
+
 export async function getLastProvenBlockRow(chain:Chains):Promise<Lastproof> {
   let scope:string = chain.from.config.chain
   if (chain.from.config.chain == "telos") scope = "tlos"
@@ -99,11 +100,6 @@ export async function getProveActionData(chain:ChainClient, request_data:any, pr
   return actionData
 }
 
-
-
-
-
-
 // Maybe use this instead of hyperion?
 export async function getProofRequestData(chain:Chains, tx_id:string, action_name:string, receiver:string, type = "heavyProof"):Promise<GetProofQuery> {
   const block_data = await getActionBlockData(chain, tx_id, action_name, (type === "lightProof"))
@@ -147,3 +143,9 @@ export async function getProofRequestData(chain:Chains, tx_id:string, action_nam
     })
   })
 }
+
+
+export async function proveTransfer() {
+
+}
+

@@ -6,7 +6,7 @@ import logger from "lib/logger"
 import { Issuea, Issueb } from "lib/types/wraptoken.types"
 const log = logger.getLogger("test")
 
-const txid = "dea1959841a2b4930e978689294cf0233a6f109e235603fd11da6b7e29489700"
+const txid = "b5ba6062e5a014a23708c344d4b1559542a3eb6b8899f8ee4bb838416f9058a0"
 const chains = {
   from: getChainClient("eos"),
   to: getChainClient("telos")
