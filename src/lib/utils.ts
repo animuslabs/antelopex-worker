@@ -7,6 +7,7 @@ let log = logger.getLogger("utils")
 
 
 export const sleep = async(ms:number) => new Promise(resolve => setTimeout(resolve, ms))
+export const sleepErr = async(ms:number) => new Promise((resolve, reject) => setTimeout(reject, ms))
 
 export function shuffle<T>(array:T[]) {
   let currentIndex = array.length

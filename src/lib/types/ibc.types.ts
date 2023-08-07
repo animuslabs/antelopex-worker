@@ -15,8 +15,7 @@ export interface IbcToken {
   precision:number
   img?:string
   tokenContract:Partial<Record<ChainKey, string>>
-  foreignWraplockContract:Partial<Record<ChainKey, string>>
-  nativeWraplockContract:Partial<Record<ChainKey, string>>
+  wraplockContract:Partial<Record<ChainKey, string>>
 }
 
 export interface ProofData {

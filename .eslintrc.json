@@ -8,6 +8,11 @@
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
+    "parser": "@typescript-eslint/parser",
+    "warnOnUnsupportedTypeScriptVersion": false,
+    "project": [
+      "./tsconfig.json"
+    ],
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
@@ -15,6 +20,9 @@
     "@typescript-eslint"
   ],
   "rules": {
+    "@typescript-eslint/no-floating-promises": [
+      "error"
+    ],
     "indent": "off",
     "no-use-before-define": [
       "off",
@@ -76,9 +84,5 @@
       "error",
       "never"
     ]
-  },
-  "ignorePatterns": [
-    "./dist/**/*",
-    "./external/**/*"
-  ]
+  }
 }

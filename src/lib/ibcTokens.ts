@@ -11,19 +11,14 @@ export const ibcTokens:IBCTokens = {
     precision: 4,
     tokenContract: {
       eos: "boidcomtoken",
-      telos: "ibc.wt.boid",
+      telos: "wt.boid",
       // ux: "ibc.wt.boid",
-      wax: "ibc.wt.boid"
+      wax: "wt.boid"
     },
-    foreignWraplockContract: {
-      telos: "ibc.wl.boid",
-      // ux: "ibc.wl.boid",
-      wax: "ibc.wl.boid"
-    },
-    nativeWraplockContract: {
-      telos: "ibc.wl.boid",
+    wraplockContract: {
+      telos: "wl.tlos.boid",
       // ux: "ibc.wl.ux",
-      wax: "ibc.wl.boid"
+      wax: "wl.wax.boid"
     }
   },
   EOS: {
@@ -35,12 +30,7 @@ export const ibcTokens:IBCTokens = {
       ux: "ibc.wt.eos",
       wax: "ibc.wt.eos"
     },
-    foreignWraplockContract: {
-      telos: "ibc.wl.eos",
-      ux: "ibc.wl.eos",
-      wax: "ibc.wl.eos"
-    },
-    nativeWraplockContract: {
+    wraplockContract: {
       telos: "ibc.wl.tlos",
       ux: "ibc.wl.ux",
       wax: "ibc.wl.wax"
@@ -50,20 +40,15 @@ export const ibcTokens:IBCTokens = {
     nativeChain: "telos",
     precision: 4,
     tokenContract: {
-      eos: "ibc.wt.telos",
+      eos: "ibc.wt.tlos",
       telos: "eosio.token",
-      ux: "ibc.wt.tlos",
-      wax: "ibc.wt.tlos"
+      ux: "ibc.wt.tlos"
+      // wax: "ibc.wt.tlos"
     },
-    foreignWraplockContract: {
-      eos: "ibc.wl.tlos",
-      ux: "ibc.wl.tlos",
-      wax: "ibc.wl.tlos"
-    },
-    nativeWraplockContract: {
+    wraplockContract: {
       ux: "ibc.wl.ux",
-      eos: "ibc.wl.eos",
-      wax: "ibc.wl.wax"
+      eos: "ibc.wl.eos"
+      // wax: "ibc.wl.wax"
     }
   },
   WAX: {
@@ -71,19 +56,14 @@ export const ibcTokens:IBCTokens = {
     precision: 8,
     tokenContract: {
       eos: "ibc.wt.wax",
-      telos: "ibc.wt.wax",
+      // telos: "ibc.wt.wax",
       ux: "ibc.wt.wax",
       wax: "eosio.token"
     },
-    foreignWraplockContract: {
-      eos: "ibc.wl.wax",
-      ux: "ibc.wl.wax",
-      telos: "ibc.wl.wax"
-    },
-    nativeWraplockContract: {
+    wraplockContract: {
       ux: "ibc.wl.ux",
-      eos: "ibc.wl.eos",
-      telos: "ibc.wl.telos"
+      eos: "ibc.wl.eos"
+      // telos: "ibc.wl.tlos"
     }
   },
   UX: {
@@ -95,12 +75,7 @@ export const ibcTokens:IBCTokens = {
       wax: "ibc.wt.ux",
       ux: "eosio.token"
     },
-    foreignWraplockContract: {
-      telos: "ibc.wl.ux",
-      eos: "ibc.wl.ux",
-      wax: "ibc.wl.ux"
-    },
-    nativeWraplockContract: {
+    wraplockContract: {
       telos: "ibc.wl.tlos",
       eos: "ibc.wl.eos",
       wax: "ibc.wl.wax"
@@ -115,12 +90,8 @@ export const ibcTokens:IBCTokens = {
       ux: "eosio.token",
       wax: "ibc.wt.ux"
     },
-    foreignWraplockContract: {
-      telos: "ibc.wl.ux",
-      eos: "ibc.wl.ux",
-      wax: "ibc.wl.ux"
-    },
-    nativeWraplockContract: {
+
+    wraplockContract: {
       telos: "ibc.wl.tlos",
       eos: "ibc.wl.eos",
       wax: "ibc.wl.wax"

@@ -261,7 +261,7 @@ export class ChainClient {
     if (result) return result as API.v1.GetInfoResponse
     else {
       const info = await this.safeDo<API.v1.GetInfoResponse>("get_info")
-      cache.set("get_info", info)
+      await cache.set("get_info", info)
       return info
     }
   }

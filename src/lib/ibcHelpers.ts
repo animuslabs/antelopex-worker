@@ -1,13 +1,16 @@
-import { Checksum256 } from "@greymass/eosio"
-import { ChainClient } from "lib/eosio"
+import { Action, Checksum256, NameType } from "@greymass/eosio"
+import fs from "fs-extra"
+import { actions } from "lib/actions"
+import { ChainClient, getChainClient } from "lib/eosio"
 import { getHypClient } from "lib/hyp"
+import { IBCTokens, ibcTokens } from "lib/ibcTokens"
 import { Lastproof } from "lib/types/ibc.prove.types"
-import { ActionReceipt } from "lib/types/ibc.types"
+import { ActionReceipt, ChainKey } from "lib/types/ibc.types"
 import { throwErr } from "lib/utils"
 import WebSocket from "ws"
 export interface Chains {from:ChainClient, to:ChainClient}
 export interface ProofQuery {block_to_prove:number, last_proven_block?:number, action_receipt_digest?:number, type:string, action_receipt:ActionReceipt}
-export interface GetProofQuery { type:string, block_to_prove:number, action?:any, last_proven_block?:number, action_receipt_digest:any }
+export interface GetProofQuery { type:string, sym:keyof IBCTokens, block_to_prove:number, action?:any, last_proven_block?:number, action_receipt_digest:any, root?:any }
 
 
 export async function getLastProvenBlockRow(chain:Chains):Promise<Lastproof> {
@@ -19,18 +22,44 @@ export async function getLastProvenBlockRow(chain:Chains):Promise<Lastproof> {
   return row
 }
 
-export async function getActionBlockData(chain:Chains, tx_id:string, action_name:string, light_proof = false):Promise<{block_to_prove:number, last_proven_block?:number, root?:Checksum256}> {
-  const trx = await getHypClient(chain.from.config.chain).getTrx(tx_id)
-  if (!trx) throwErr(`Transaction not found in ${chain.from.config.chain}: ${tx_id}`)
+export function getToChain(account:string):ChainClient {
+  let toChain:ChainKey|null = null
+  // // search ibcTokens for a token with matching account under wraplock or token contract
+  Object.entries(ibcTokens).find(ibcToken => Object.entries(ibcToken[1].tokenContract).find(acct => {
+    const match = acct[1] === account
+    if (match) toChain = acct[0] as ChainKey
+    return match
+  }))
+  if (toChain) return getChainClient(toChain)
+
+  Object.entries(ibcTokens).find(ibcToken => Object.entries(ibcToken[1].wraplockContract).find(acct => {
+    const match = acct[1] === account
+    if (match) toChain = acct[0] as ChainKey
+    return match
+  }))
+  if (toChain) return getChainClient(toChain)
+  throwErr(`Couldnt find chain from account ${account} in wrap or token contracts`)
+}
+
+export async function getActionBlockData(fromChain:ChainClient, tx_id:string, action_name:string, light_proof = false, toChain?:ChainClient):Promise<{sym?:keyof IBCTokens, data:{block_to_prove:number, last_proven_block?:number, root?:Checksum256}}> {
+  const trx = await getHypClient(fromChain.config.chain).getTrx(tx_id)
+  if (!trx) throwErr(`Transaction not found in ${fromChain.config.chain}: ${tx_id}`)
   const act = trx.actions.find(a => a.act.name == action_name)
   if (!act) throwErr(`Could not find action ${action_name}`)
   const data:any = { block_to_prove: act.block_num }
   if (light_proof) {
-    const row = await getLastProvenBlockRow(chain)
+    if (!toChain) toChain = getToChain(act.act.account)
+    const row = await getLastProvenBlockRow({ from: fromChain, to: toChain })
     data.last_proven_block = row.block_height.toNumber()
     data.root = row.block_merkle_root.toString()
   }
-  return data
+  const actData = act.act.data as any
+  const quantityString:string = actData.xfer.quantity.quantity
+  if (!quantityString) throwErr("Could not find quantity: " + JSON.stringify(actData, null, 2))
+  const sym = quantityString.split(" ")[1]
+  let returnData = { data } as any
+  if (sym) returnData.sym = sym
+  return returnData
 }
 
 export async function getProof(chain:ChainClient, queryData:GetProofQuery) {
@@ -66,6 +95,55 @@ export async function getProof(chain:ChainClient, queryData:GetProofQuery) {
     })
   })
 }
+type ActionType = keyof typeof actions
+// export type ActionType = "lockToken" | "wrapToken"
+
+export function findActionType(contractName:string):{ type:ActionType, destinationChain:ChainClient } {
+  let type:ActionType
+  if (contractName.includes("wl.")) type = "wrapToken"
+  else type = "lockToken"
+  return {
+    destinationChain: getToChain(contractName),
+    type
+  }
+}
+
+export async function makeProofAction(chain:ChainClient, requestData:GetProofQuery, proofData:any, lightProof = false):Promise<{toChain:ChainClient, action:Action}> {
+  const sym = requestData.sym
+  const actionData = {
+    account: requestData.action.account,
+    name: requestData.action.name,
+    authorization: requestData.action.authorization,
+    data: requestData.action.data
+  }
+  const type = findActionType(actionData.account)
+
+  let auth_sequence = []
+  for (let authSequence of requestData.action.receipt.auth_sequence) auth_sequence.push({ account: authSequence[0], sequence: authSequence[1] })
+  requestData.action.receipt.auth_sequence = auth_sequence
+
+  let data = { ...proofData.proof }
+  data.actionproof = {
+    ...proofData.proof.actionproof,
+    action: actionData,
+    receipt: { ...requestData.action.receipt }
+  }
+  if (requestData.root) actionData.data.blockproof.root = requestData.root
+  let act:Action = Action.prototype
+  const ibcToken = ibcTokens[sym]
+  let native = ibcToken.nativeChain == chain.config.chain
+  const contract = !native ? ibcToken.wraplockContract[type.destinationChain.config.chain] : ibcToken.tokenContract[type.destinationChain.config.chain]
+  if (!contract) throwErr(`could not find contract for symbol: ${sym} chain: ${chain.config.chain}`)
+  if (!lightProof) {
+    if (type.type === "wrapToken") act = actions.wrapToken.issueA(data, contract, type.destinationChain.config.chain)
+    else if (type.type === "lockToken") act = actions.lockToken.withdrawA(data, contract, type.destinationChain.config.chain)
+  } else {
+    if (type.type === "wrapToken") act = actions.wrapToken.issueB(data, contract, type.destinationChain.config.chain)
+    else if (type.type === "lockToken") act = actions.lockToken.withdrawB(data, contract, type.destinationChain.config.chain)
+  }
+  fs.writeJsonSync("../action.json", { data, contract, destination: type.destinationChain.config.chain }, { spaces: 2 })
+  return { toChain: type.destinationChain, action: act }
+}
 
 export async function getProveActionData(chain:ChainClient, request_data:any, proof_data:any, light_proof = false) {
   console.log("request_data", request_data)
@@ -100,25 +178,41 @@ export async function getProveActionData(chain:ChainClient, request_data:any, pr
   return actionData
 }
 
-// Maybe use this instead of hyperion?
-export async function getProofRequestData(chain:Chains, tx_id:string, action_name:string, receiver:string, type = "heavyProof"):Promise<GetProofQuery> {
-  const block_data = await getActionBlockData(chain, tx_id, action_name, (type === "lightProof"))
-  // console.log("block_data", block_data)
+export async function getProofRequestData(fromChain:ChainClient, tx_id:string, action_name:string, receiver?:string, type = "heavyProof"):Promise<GetProofQuery> {
+  const block_data = await getActionBlockData(fromChain, tx_id, action_name, (type === "lightProof"))
+  let sym = block_data.sym as keyof IBCTokens
+  let nativeToken = ibcTokens[sym].nativeChain === fromChain.config.chain
+  if (!sym) throwErr("missing sym: " + tx_id)
 
-  if (!block_data.block_to_prove) throwErr("missing block_to_prove")
+  if (!receiver && !nativeToken) receiver = ibcTokens[sym].tokenContract[fromChain.config.chain]
+  console.log("sym", sym)
+  console.log("native", nativeToken)
+  console.log("receiver", receiver)
+
+  if (!block_data.data.block_to_prove) throwErr("missing block_to_prove")
   return new Promise((resolve, reject) => {
     //initialize socket to proof server
-    const ws = new WebSocket(chain.from.getProofSocket())
+    const ws = new WebSocket(fromChain.getProofSocket())
 
     ws.addEventListener("open", async(event) => {
       // connected to websocket server
-      const query = { type: "getBlockActions", block_to_prove: block_data.block_to_prove }
+      const query = { type: "getBlockActions", block_to_prove: block_data.data.block_to_prove }
       ws.send(JSON.stringify(query))
     })
 
     ws.addEventListener("error", (event) => {
       console.error(`WebSocket error: ${event.message}`)
     })
+    // let potentialReceivers:string[] = []
+    // if (!receiver) {
+    //   Object.entries(ibcTokens).forEach(tok => {
+    //     const tkn = tok[1].tokenContract[fromChain.config.chain]
+    //     if (tkn) potentialReceivers.push(tkn)
+    //     const wl = tok[1].wraplockContract[fromChain.config.chain]
+    //     if (wl) potentialReceivers.push(wl)
+    //   })
+    // }
+
 
     //messages from websocket server
     ws.addEventListener("message", (event:any) => {
@@ -132,14 +226,24 @@ export async function getProofRequestData(chain:Chains, tx_id:string, action_nam
         return t[0].transactionId === tx_id
       })
       const action_data = action_receipt[0].find((a:any) => {
-        return a.receiver === receiver && a.action.name == action_name
+        if (receiver) return a.receiver === receiver && a.action.name == action_name
+        else {
+          console.log("actionName:", a.action.name)
+          console.log("receiver: ", a.receiver)
+          let receivers = Object.values(ibcTokens[sym].wraplockContract)
+          if (a.action.name == action_name && receivers.includes(a.receiver)) {
+            return true
+          }
+          return false
+        }
       })
       if (!action_data) throwErr(`Action ${action_name} and receiver ${receiver} not found `)
       console.log("action data ", JSON.stringify(action_data, null, 2))
       const action = action_data.action
       action.receipt = action_data.receipt
       const action_receipt_digest = action_data.action_receipt_digest
-      resolve({ type, action, action_receipt_digest, ...block_data })
+
+      resolve({ type, action, action_receipt_digest, ...block_data.data, sym })
     })
   })
 }

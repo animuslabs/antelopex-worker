@@ -3,17 +3,18 @@ import fs from "fs-extra"
 import { getChainClient } from "lib/eosio"
 import { getProof, getProofRequestData, getProveActionData } from "lib/ibcHelpers"
 import logger from "lib/logger"
+import { Withdrawa } from "lib/types/wraplock.types"
 import { Issuea, Issueb } from "lib/types/wraptoken.types"
 const log = logger.getLogger("test")
 
-const txid = "b5ba6062e5a014a23708c344d4b1559542a3eb6b8899f8ee4bb838416f9058a0"
+const txid = "a4bad16fed831d8d8c9b6b99da047a5bad83aecf159217bed116e1eeb71ce95c"
 const chains = {
-  from: getChainClient("eos"),
-  to: getChainClient("telos")
+  from: getChainClient("telos"),
+  to: getChainClient("eos")
 }
 
 try {
-  const data = await getProofRequestData(chains, txid, "emitxfer", "wl.tlos.boid")
+  const data = await getProofRequestData(chains.from, txid, "emitxfer", "wt.boid")
   log.info(data)
 
   const proof = await getProof(chains.from, data)
@@ -24,10 +25,10 @@ try {
   fs.writeJSONSync("../data.json", actionData.data, { spaces: 2 })
   const worker = chains.to.config.worker
   const act = Action.from({
-    account: "wt.boid",
-    name: "issuea",
+    account: "wl.tlos.boid",
+    name: "withdrawa",
     authorization: [PermissionLevel.from({ actor: worker.account, permission: worker.permission })],
-    data: Issuea.from(actionData.data)
+    data: Withdrawa.from(actionData.data)
     // data: Issueb.from(actionData.data)
   })
   const result = await chains.to.sendAction(act)

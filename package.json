@@ -26,7 +26,7 @@
     "eslint-plugin-n": "^15.0.0",
     "eslint-plugin-promise": "^6.0.0",
     "nodemon": "^2.0.19",
-    "prisma": "^4.11.0",
+    "prisma": "^5.1.1",
     "tsc-alias": "^1.8.6",
     "typescript": "^5.0.4"
   },
@@ -34,7 +34,7 @@
     "@greymass/eosio": "^0.6.11",
     "@grpc/grpc-js": "^1.8.14",
     "@grpc/proto-loader": "^0.7.6",
-    "@prisma/client": "^4.8.0",
+    "@prisma/client": "^5.1.1",
     "@proton/hyperion": "^3.4.0",
     "@trpc/server": "^10.7.0",
     "@types/cache-manager": "^4.0.2",

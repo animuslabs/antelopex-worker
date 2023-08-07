@@ -42,9 +42,10 @@
   },
   "exclude": [
     "node_modules",
-    "dist/**/*"
+    "dist/**/*",
+    "./.eslintrc.json"
   ],
   "include": [
-    "src/**/*"
+    "src/**/*",
   ]
 }
