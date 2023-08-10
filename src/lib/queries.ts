@@ -1,6 +1,5 @@
-// import { getAllScopes, getFullTable, pickRpc, safeDo } from "./eosio"
 // import * as sys from "./types/antelopex.system.types"
-// import env from "./env"
+// import { configs } from "./env"
 // import cacheManager from "cache-manager"
 // let cache = await cacheManager.caching("memory", { max: 100, ttl: 300/*seconds*/ })
 

@@ -13,5 +13,15 @@ export function addIBCOrderError(order:IbcOrder, error:Error) {
 }
 
 export function orderRelayed(order:IbcOrder, detinationTxid:string, destinationChain:ChainKey) {
-  return db.iBCOrder.update({ where: { originTxid: order.trxid.toString() }, data: { relayed: true, detinationTxid, destinationChain }})
+  return db.iBCOrder.update({ where: { originTxid: order.trxid.toString() }, data: { relayed: true, detinationTxid, destinationChain, shouldRetry: false }})
+}
+
+
+export function UpdateOrderError(order:IbcOrder, error:Error) {
+  const errMsg = error.toString()
+  const parsed = errMsg.split("Error: assertion failure with message: action already proved")
+  const errString = parsed[1] || errMsg
+  const proved = errMsg.includes("action already proved")
+  if (proved) return db.iBCOrder.update({ where: { originTxid: order.trxid.toString() }, data: { relayed: true, shouldRetry: false }})
+  else return addIBCOrderError(order, new Error(errString))
 }

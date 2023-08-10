@@ -1,9 +1,9 @@
-import { Action, Checksum256, NameType } from "@greymass/eosio"
+import { Action, Asset, Checksum256, NameType } from "@greymass/eosio"
 import fs from "fs-extra"
 import { actions } from "lib/actions"
 import { ChainClient, getChainClient } from "lib/eosio"
 import { getHypClient } from "lib/hyp"
-import { IBCTokens, ibcTokens } from "lib/ibcTokens"
+import { IBCTokens, getIBCToken } from "lib/ibcTokens"
 import { Lastproof } from "lib/types/ibc.prove.types"
 import { ActionReceipt, ChainKey } from "lib/types/ibc.types"
 import { throwErr } from "lib/utils"
@@ -22,41 +22,43 @@ export async function getLastProvenBlockRow(chain:Chains):Promise<Lastproof> {
   return row
 }
 
-export function getToChain(account:string):ChainClient {
-  let toChain:ChainKey|null = null
-  // // search ibcTokens for a token with matching account under wraplock or token contract
-  Object.entries(ibcTokens).find(ibcToken => Object.entries(ibcToken[1].tokenContract).find(acct => {
-    const match = acct[1] === account
-    if (match) toChain = acct[0] as ChainKey
-    return match
-  }))
-  if (toChain) return getChainClient(toChain)
+export async function getIsNative(sym:Asset.Symbol, fromChain:ChainClient) {
+  const symbol = Asset.Symbol.from(sym)
+  const row = await getIBCToken(fromChain, symbol)
+  return row.native_chain.toString() === fromChain.config.chain
+}
 
-  Object.entries(ibcTokens).find(ibcToken => Object.entries(ibcToken[1].wraplockContract).find(acct => {
-    const match = acct[1] === account
-    if (match) toChain = acct[0] as ChainKey
-    return match
-  }))
-  if (toChain) return getChainClient(toChain)
-  throwErr(`Couldnt find chain from account ${account} in wrap or token contracts`)
+export async function getToChain(sym:Asset.Symbol, account:string, fromChain:ChainClient):Promise<ChainClient> {
+  const symbol = Asset.Symbol.from(sym)
+  const row = await getIBCToken(fromChain, symbol)
+  if (row.token_contract.toString() === account) return getChainClient(row.native_chain.toString() as ChainKey)
+  else {
+    const wraplock = row.wraplock_contracts.find(w => w.contract.toString() === account)
+    if (!wraplock) throwErr("can't find wraplock contract for : " + sym.toString())
+    return getChainClient(wraplock.destination_chain.toString() as ChainKey)
+  }
 }
 
 export async function getActionBlockData(fromChain:ChainClient, tx_id:string, action_name:string, light_proof = false, toChain?:ChainClient):Promise<{sym?:keyof IBCTokens, data:{block_to_prove:number, last_proven_block?:number, root?:Checksum256}}> {
   const trx = await getHypClient(fromChain.config.chain).getTrx(tx_id)
   if (!trx) throwErr(`Transaction not found in ${fromChain.config.chain}: ${tx_id}`)
   const act = trx.actions.find(a => a.act.name == action_name)
+
   if (!act) throwErr(`Could not find action ${action_name}`)
+
+  const actData = act.act.data as any
+  const quantityString:string = actData.xfer.quantity.quantity
+  const sym = Asset.from(quantityString).symbol
+
   const data:any = { block_to_prove: act.block_num }
   if (light_proof) {
-    if (!toChain) toChain = getToChain(act.act.account)
+    if (!toChain) toChain = await getToChain(sym, act.act.account, fromChain)
     const row = await getLastProvenBlockRow({ from: fromChain, to: toChain })
     data.last_proven_block = row.block_height.toNumber()
     data.root = row.block_merkle_root.toString()
   }
-  const actData = act.act.data as any
-  const quantityString:string = actData.xfer.quantity.quantity
+
   if (!quantityString) throwErr("Could not find quantity: " + JSON.stringify(actData, null, 2))
-  const sym = quantityString.split(" ")[1]
   let returnData = { data } as any
   if (sym) returnData.sym = sym
   return returnData
@@ -79,7 +81,7 @@ export async function getProof(chain:ChainClient, queryData:GetProofQuery) {
         if (query.action_receipt) query.action_receipt.auth_sequence = auth_sequence
       }
 
-      console.log("Query:", JSON.stringify(query, null, 2))
+      // console.log("Query:", JSON.stringify(query, null, 2))
       ws.send(JSON.stringify(query))
     })
 
@@ -87,7 +89,7 @@ export async function getProof(chain:ChainClient, queryData:GetProofQuery) {
     ws.addEventListener("message", (event:any) => {
       const res = JSON.parse(event.data)
       //log non-progress messages from ibc server
-      if (res.type !== "progress") console.log("Received message from ibc proof server", res)
+      // if (res.type !== "progress") console.log("Received message from ibc proof server", res)
       if (res.type === "error") reject(new Error(res.error))
       if (res.type !== "proof") return
       ws.close()
@@ -130,9 +132,14 @@ export async function makeProofAction(chain:ChainClient, requestData:GetProofQue
   }
   if (requestData.root) actionData.data.blockproof.root = requestData.root
   let act:Action = Action.prototype
-  const ibcToken = ibcTokens[sym]
+  const ibcToken = getIBCToken(type.destinationChain, sym)
   let native = ibcToken.nativeChain == chain.config.chain
   const contract = !native ? ibcToken.wraplockContract[type.destinationChain.config.chain] : ibcToken.tokenContract[type.destinationChain.config.chain]
+  console.log("ibctkn:", ibcToken)
+  console.log("native:", native)
+  console.log("action contract:", contract)
+  console.log("destination:", type.destinationChain.config.chain)
+
   if (!contract) throwErr(`could not find contract for symbol: ${sym} chain: ${chain.config.chain}`)
   if (!lightProof) {
     if (type.type === "wrapToken") act = actions.wrapToken.issueA(data, contract, type.destinationChain.config.chain)
@@ -180,7 +187,7 @@ export async function getProveActionData(chain:ChainClient, request_data:any, pr
 
 export async function getProofRequestData(fromChain:ChainClient, tx_id:string, action_name:string, receiver?:string, type = "heavyProof"):Promise<GetProofQuery> {
   const block_data = await getActionBlockData(fromChain, tx_id, action_name, (type === "lightProof"))
-  let sym = block_data.sym as keyof IBCTokens
+  let sym = block_data.sym
   let nativeToken = ibcTokens[sym].nativeChain === fromChain.config.chain
   if (!sym) throwErr("missing sym: " + tx_id)
 
@@ -238,7 +245,7 @@ export async function getProofRequestData(fromChain:ChainClient, tx_id:string, a
         }
       })
       if (!action_data) throwErr(`Action ${action_name} and receiver ${receiver} not found `)
-      console.log("action data ", JSON.stringify(action_data, null, 2))
+      // console.log("action data ", JSON.stringify(action_data, null, 2))
       const action = action_data.action
       action.receipt = action_data.receipt
       const action_receipt_digest = action_data.action_receipt_digest

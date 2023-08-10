@@ -1,5 +1,5 @@
 import db from "lib/db"
-import { addIBCOrderError, newIBCOrder, orderRelayed } from "lib/dbHelpers"
+import { UpdateOrderError, addIBCOrderError, newIBCOrder, orderRelayed } from "lib/dbHelpers"
 import { chainClients } from "lib/eosio"
 import { getProof, getProofRequestData, makeProofAction } from "lib/ibcHelpers"
 import { IbcOrder } from "lib/types/antelopex.system.types"
@@ -51,7 +51,7 @@ async function checkOrders() {
         console.log(result.errors[0].error)
         const receipt = result.receipts[0]
         if (!receipt) {
-          await addIBCOrderError(order, new Error(result.errors[0].error))
+          await UpdateOrderError(order, new Error(result.errors[0].error))
           continue
         } else {
           const txid = receipt.receipt.id

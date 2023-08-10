@@ -7,14 +7,14 @@ import { Withdrawa } from "lib/types/wraplock.types"
 import { Issuea, Issueb } from "lib/types/wraptoken.types"
 const log = logger.getLogger("test")
 
-const txid = "a4bad16fed831d8d8c9b6b99da047a5bad83aecf159217bed116e1eeb71ce95c"
+const txid = "b9d2ff0dcf6ad49c9b8e1dc20fe189099083168343a63a0482acefe740f6d59c"
 const chains = {
   from: getChainClient("telos"),
   to: getChainClient("eos")
 }
 
 try {
-  const data = await getProofRequestData(chains.from, txid, "emitxfer", "wt.boid")
+  const data = await getProofRequestData(chains.from, txid, "emitxfer", "ibc.wt.eos")
   log.info(data)
 
   const proof = await getProof(chains.from, data)
@@ -25,7 +25,7 @@ try {
   fs.writeJSONSync("../data.json", actionData.data, { spaces: 2 })
   const worker = chains.to.config.worker
   const act = Action.from({
-    account: "wl.tlos.boid",
+    account: "ibc.wl.eos",
     name: "withdrawa",
     authorization: [PermissionLevel.from({ actor: worker.account, permission: worker.permission })],
     data: Withdrawa.from(actionData.data)
