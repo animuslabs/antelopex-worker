@@ -1,38 +1,26 @@
 import { Action, PermissionLevel } from "@greymass/eosio"
 import fs from "fs-extra"
 import { getChainClient } from "lib/eosio"
-import { getProof, getProofRequestData, getProveActionData } from "lib/ibcHelpers"
+import { getEmitXferMeta, getProof, makeXferProveAction } from "lib/ibcUtil"
 import logger from "lib/logger"
 import { Withdrawa } from "lib/types/wraplock.types"
 import { Issuea, Issueb } from "lib/types/wraptoken.types"
+import { toObject } from "lib/utils"
 const log = logger.getLogger("test")
 
-const txid = "b9d2ff0dcf6ad49c9b8e1dc20fe189099083168343a63a0482acefe740f6d59c"
+const txid = "334781dc576d91ffc7a282376e3c3722f6a9ec02adeb1f51ee7af5ca081df819"
+const blockNum = 329948896
 const chains = {
-  from: getChainClient("telos"),
-  to: getChainClient("eos")
+  from: getChainClient("eos"),
+  to: getChainClient("telos")
 }
 
 try {
-  const data = await getProofRequestData(chains.from, txid, "emitxfer", "ibc.wt.eos")
-  log.info(data)
-
+  const data = await getEmitXferMeta(chains.from, txid, blockNum)
   const proof = await getProof(chains.from, data)
-  // // // console.log(proof)
-  // // log.info("get action data")
-  const actionData = await getProveActionData(chains.to, data, proof)
-  log.info(actionData.data)
-  fs.writeJSONSync("../data.json", actionData.data, { spaces: 2 })
-  const worker = chains.to.config.worker
-  const act = Action.from({
-    account: "ibc.wl.eos",
-    name: "withdrawa",
-    authorization: [PermissionLevel.from({ actor: worker.account, permission: worker.permission })],
-    data: Withdrawa.from(actionData.data)
-    // data: Issueb.from(actionData.data)
-  })
-  const result = await chains.to.sendAction(act)
-  log.info(result)
+  const { destinationChain, action } = await makeXferProveAction(chains.from, data, proof)
+  const result = await destinationChain.sendAction(action)
+  console.log(result)
 } catch (error) {
   log.error(error)
 }

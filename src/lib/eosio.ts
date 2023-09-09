@@ -78,6 +78,10 @@ export class ChainClient {
     this.cache = caching("memory", { max: 100, ttl: ms("12s") })
   }
 
+  get name():ChainKey {
+    return this.config.chain
+  }
+
   cache:Promise<MemoryCache>
   config:EosioConfig
   rpcs:{ endpoint:URL, rpc:typeof client.v1.chain }[]
@@ -106,7 +110,7 @@ export class ChainClient {
     return socket
   }
 
-  async errorCounter(endpoint:string, error:string) {
+  errorCounter(endpoint:string, error:string) {
     log.info("error:", endpoint, error)
   }
 

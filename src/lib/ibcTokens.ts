@@ -1,26 +1,32 @@
 import { Asset } from "@greymass/eosio"
 import { ChainClient, chainClients } from "lib/eosio"
 import { IbcToken } from "lib/types/antelopex.system.types"
-import { IbcSymbols } from "lib/types/ibc.types"
+import { ChainKey, IbcSymbols, chainNames } from "lib/types/ibc.types"
 import { throwErr } from "lib/utils"
 
 export const ibcSymbols = ["EOS", "TLOS", "WAX", "UX", "UTXRAM", "BOID"] as const
 
 export type IBCTokens = Record<string, IbcToken>
+export type IBCTokenCache = Record<ChainKey, IBCTokens>
 
-const ibcTokens:IBCTokens = {
-
+function initIBCTokenCache() {
+  let cache:any = {}
+  chainNames.forEach(name => cache[name] = {})
+  return cache as IBCTokenCache
 }
+const ibcTokens:IBCTokenCache = initIBCTokenCache()
+
 
 export async function getIBCToken(chain:ChainClient, symbol:Asset.Symbol) {
-  const existing = ibcTokens[symbol.code.toString()]
+  const existing = ibcTokens[chain.name][symbol.code.toString()]
   if (existing) return existing
   const rows = await chain.getTableRows({ code: chain.config.contracts.system, table: "ibctokens", upper_bound: symbol.value, lower_bound: symbol.value, limit: 1, type: IbcToken })
   const row = rows[0]
   if (!row) throwErr(`Can't find row for ${symbol.toString()} on ${chain.config.chain}`)
-  ibcTokens[symbol.code.toString()] = row
+  ibcTokens[chain.name][symbol.code.toString()] = row
   return row
 }
+
 
 
 

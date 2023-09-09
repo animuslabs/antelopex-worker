@@ -1,13 +1,15 @@
 import db from "lib/db"
 import { UpdateOrderError, addIBCOrderError, newIBCOrder, orderRelayed } from "lib/dbHelpers"
 import { chainClients } from "lib/eosio"
-import { getProof, getProofRequestData, makeProofAction } from "lib/ibcHelpers"
 import { IbcOrder } from "lib/types/antelopex.system.types"
 import { sleep, sleepErr, throwErr } from "lib/utils"
 import ms from "ms"
+import logger from "lib/logger"
+import { getEmitXferMeta, getProof, makeXferProveAction } from "lib/ibcUtil"
 
 async function checkOrders() {
   for (const client of Object.values(chainClients)) {
+    const log = logger.getLogger("checkOrders-" + client.name)
     await sleep(1000)
     const conf = client.config
     const orders = await client.getFullTable({ tableName: "ibcorders", contract: conf.contracts.system }, IbcOrder)
@@ -35,17 +37,11 @@ async function checkOrders() {
 
     for (const order of filteredOrders) {
       try {
-        console.log("get action data")
-        await sleep(1000)
-        const actData = await getProofRequestData(client, order.trxid.toString(), "emitxfer")
-        console.log("get proof")
-        await sleep(1000)
-        const proof = await getProof(client, actData)
-        console.log("making proof action")
-        await sleep(1000)
-        const action = await makeProofAction(client, actData, proof, false)
-        console.log("sending action")
-        const result = await action.toChain.sendAction(action.action)
+        const data = await getEmitXferMeta(client, order.trxid.toString(), order.block_num.toNumber())
+        const proof = await getProof(client, data)
+        const { destinationChain, action } = await makeXferProveAction(client, data, proof)
+        const result = await destinationChain.sendAction(action)
+        console.log(result)
         if (!result) throwErr("Null result")
         console.log(result)
         console.log(result.errors[0].error)
@@ -55,7 +51,7 @@ async function checkOrders() {
           continue
         } else {
           const txid = receipt.receipt.id
-          await orderRelayed(order, txid, action.toChain.config.chain)
+          await orderRelayed(order, txid, destinationChain.name)
         }
       } catch (error:any) {
         console.error(error)
