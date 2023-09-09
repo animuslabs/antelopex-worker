@@ -44,10 +44,12 @@ async function checkOrders() {
         console.log(result)
         if (!result) throwErr("Null result")
         console.log(result)
-        console.log(result.errors[0].error)
         const receipt = result.receipts[0]
         if (!receipt) {
-          await UpdateOrderError(order, new Error(result.errors[0].error))
+          const error = result.errors[0]?.error
+          if (!error) throwErr("Receipt and error fields missing")
+          log.error(error)
+          await UpdateOrderError(order, new Error(error))
           continue
         } else {
           const txid = receipt.receipt.id

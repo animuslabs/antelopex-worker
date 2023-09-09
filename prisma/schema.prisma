@@ -10,16 +10,17 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
 model IBCOrder {
-  originChain  String
-  originTxid String   @unique
+  originChain      String
+  originTxid       String   @unique
   destinationChain String?
-  detinationTxid String?   @unique
-  relayed    Boolean @default(false)
-  relayError      String?
-  createdAt       DateTime @default(now()) @id
-  blockNum       BigInt
-  shouldRetry Boolean @default(true)
+  detinationTxid   String?  @unique
+  relayed          Boolean  @default(false)
+  relayError       String?
+  createdAt        DateTime @id @default(now())
+  blockNum         BigInt
+  shouldRetry      Boolean  @default(true)
 
   @@index([originTxid])
   @@index([blockNum])
