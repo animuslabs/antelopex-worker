@@ -8,7 +8,8 @@ import { ProofData, ActionReceipt, ChainKey, ProofDataResult, GetProofQuery, Pro
 import { Emitxfer } from "lib/types/wraplock.types"
 import { throwErr, toObject } from "lib/utils"
 import WebSocket from "ws"
-
+import logger from "lib/logger"
+const log = logger.getLogger("ibcUtil")
 
 export async function getEmitXferMeta(chain:ChainClient, txId:string, blockNum:number):Promise<GetProofQuery> {
   return new Promise((resolve, reject) => {
@@ -19,14 +20,15 @@ export async function getEmitXferMeta(chain:ChainClient, txId:string, blockNum:n
     })
 
     ws.addEventListener("error", (event) => {
-      console.error(`WebSocket error: ${event.message}`)
+      log.debug(`WebSocket error: ${event.message}`) // DEBUG log
     })
 
     ws.addEventListener("message", (event:any) => {
-      // console.log(event)
+      log.debug(event) // DEBUG log
 
       const res = JSON.parse(event.data)
-      // if (res.type !== "progress") console.log("Received message from ibc getBlockActions", res)
+      log.debug("Received message from ibc getBlockActions", res) // DEBUG log
+
       if (res.type === "error") reject(new Error(res.error))
       if (res.type !== "getBlockActions") return
       ws.close()
@@ -57,11 +59,11 @@ export async function getProof(chain:ChainClient, queryData:GetProofQuery, type:
       ws.send(JSON.stringify(query))
     })
 
-    //messages from websocket server
+    // messages from websocket server
     ws.addEventListener("message", (event:any) => {
       const res = JSON.parse(event.data)
-      //log non-progress messages from ibc server
-      // if (res.type !== "progress") console.log("Received message from ibc proof server", res)
+      log.debug("Received message from ibc proof server", res) // DEBUG log
+
       if (res.type === "error") reject(new Error(res.error))
       if (res.type !== "proof") return
       ws.close()
@@ -100,7 +102,7 @@ export async function makeXferProveAction(fromChain:ChainClient, requestData:Get
     if (!wlConfig) throwErr("No valid wraplock contract for sym contract", sym, contract)
     destinationChain = getChainClient(wlConfig.destination_chain.toString() as ChainKey)
     const destinationTokenRow = await getIBCToken(destinationChain, sym)
-    console.log(destinationChain.name, toObject(destinationTokenRow))
+    log.debug(destinationChain.name, toObject(destinationTokenRow)) // DEBUG log
 
     act = actions.wrapToken.issueA(data, destinationTokenRow.token_contract, destinationChain.name)
     // act = Action.prototype

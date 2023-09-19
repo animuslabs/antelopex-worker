@@ -8,8 +8,8 @@ import { Issuea, Issueb } from "lib/types/wraptoken.types"
 import { toObject } from "lib/utils"
 const log = logger.getLogger("test")
 
-const txid = "334781dc576d91ffc7a282376e3c3722f6a9ec02adeb1f51ee7af5ca081df819"
-const blockNum = 329948896
+const txid = "2abc492417057e511fdedf0ada0852f956a562253a1e09186d7dd38818cb0d6e"
+const blockNum = 323793294
 const chains = {
   from: getChainClient("eos"),
   to: getChainClient("telos")

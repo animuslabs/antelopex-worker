@@ -1,7 +1,7 @@
 import db from "lib/db"
 import { IbcOrder } from "lib/types/antelopex.system.types"
 import { ChainKey } from "lib/types/ibc.types"
-import { IBCOrder } from "../../prisma/client"
+import { IBCOrder } from "@prisma/client"
 
 
 export function newIBCOrder(chain:ChainKey, order:IbcOrder) {
