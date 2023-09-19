@@ -90,7 +90,7 @@ export async function makeXferProveAction(fromChain:ChainClient, requestData:Get
   const contract = requestData.action.account.toString()
   const tknRow = await getIBCToken(fromChain, sym)
   const toNative = tknRow.native_chain.toString() != fromChain.config.chain
-  fs.writeJsonSync("../data.json", data)
+  // fs.writeJsonSync("../data.json", data)
   if (toNative) {
     destinationChain = getChainClient(tknRow.native_chain.toString() as ChainKey)
     const destinationTokenRow = await getIBCToken(destinationChain, sym)
