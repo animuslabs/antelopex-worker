@@ -6,18 +6,30 @@ import { sleep, sleepErr, throwErr } from "lib/utils"
 import ms from "ms"
 import logger from "lib/logger"
 import { getEmitXferMeta, getProof, makeXferProveAction } from "lib/ibcUtil"
+import { UInt64 } from "@greymass/eosio"
 
 async function checkOrders() {
   for (const client of Object.values(chainClients)) {
     const log = logger.getLogger("checkOrders-" + client.name)
-    log.debug(`Checking orders for client: ${client.name}`) // DEBUG log
+    log.debug(`Checking orders for chain: ${client.name}`) // DEBUG log
 
     await sleep(1000)
     const conf = client.config
-    log.debug(`Fetching full table for client: ${client.name}`) // DEBUG log
 
-    const orders = await client.getFullTable({ tableName: "ibcorders", contract: conf.contracts.system }, IbcOrder)
+    const oldestRecord = await db.iBCOrder.findFirst({
+      orderBy: { blockNum: "desc" },
+      take: 1,
+      where: { originChain: client.name }
+    })
 
+    let orders:IbcOrder[] = []
+    if (oldestRecord) {
+      log.info("oldest block for chain:", oldestRecord?.blockNum.toString(), "getting orders after this block")
+      orders = await client.getTableRows({ table: "ibcorders", code: conf.contracts.system, index_position: "secondary", lower_bound: UInt64.from(parseInt(oldestRecord?.blockNum.toString()) + 1), type: IbcOrder, limit: 1000 })
+    } else {
+      log.info(`Fetching full table for chain: ${client.name}`) // DEBUG log
+      orders = await client.getFullTable({ tableName: "ibcorders", contract: conf.contracts.system }, IbcOrder)
+    }
     let filteredOrders:IbcOrder[] = []
     const info = await client.getInfo()
     const liBlock = info.last_irreversible_block_num.toNumber()
