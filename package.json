@@ -65,7 +65,7 @@
     "node-fetch": "^3.2.10",
     "node-mailjet": "^6.0.0",
     "prisma-client": "^0.0.0",
-    "protobufjs": "^7.2.3",
+    "protobufjs": "^7.2.4",
     "tozod": "^3.0.0",
     "trpc-openapi": "^1.1.0",
     "tsc-watch": "^6.0.4",
