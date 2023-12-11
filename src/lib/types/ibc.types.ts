@@ -1,7 +1,7 @@
 import { Action } from "@greymass/eosio"
 import { HypAction } from "lib/hyp"
 import { ibcSymbols } from "lib/ibcTokens"
-export const chainNames = ["telos", "eos", "ux", "wax"] as const
+export const chainNames = ["tlos", "eos", "ux", "wax"] as const
 export type ChainKey = typeof chainNames[number]
 
 export type IbcSymbols = typeof ibcSymbols[number]

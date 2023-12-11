@@ -176,6 +176,15 @@ export class Heavyproof extends Struct {
   @Struct.field(Sblockheader, { array: true }) bftproof!:Sblockheader[]
 }
 
+// @Struct.type("lightproof")
+// export class Lightproof extends Struct {
+//   @Struct.field(Checksum256) chain_id!:Checksum256
+//   @Struct.field(Blockheader) header!:Blockheader
+//   @Struct.field(Checksum256) root!:Checksum256
+//   @Struct.field(Checksum256, { array: true }) bmproofpath!:Checksum256[]
+// }
+
+
 @Struct.type("checkproofd")
 export class Checkproofd extends Struct {
   @Struct.field(Heavyproof) blockproof!:Heavyproof

@@ -36,7 +36,7 @@ export interface EosioConfig {
     port:number
   }
 }
-type chains = "eos" | "kylin" | "jungle" | "wax" | "waxTest" | "telos" | "telosTest"
+type chains = "eos" | "kylin" | "jungle" | "wax" | "waxTest" | "tlos" | "telosTest"
 type eosioConfigs = { [k in chains]?:EosioConfig }
 interface envType {
   chain:eosioConfigs

@@ -1,4 +1,4 @@
-import { Action, Asset, Checksum256 } from "@greymass/eosio"
+import { Action, Asset, Checksum256, NameType } from "@greymass/eosio"
 import fs from "fs-extra"
 import { actions } from "lib/actions"
 import { ChainClient, getChainClient } from "lib/eosio"
@@ -9,6 +9,7 @@ import { Emitxfer } from "lib/types/wraplock.types"
 import { throwErr, toObject } from "lib/utils"
 import WebSocket from "ws"
 import logger from "lib/logger"
+import { IbcToken } from "lib/types/antelopex.system.types"
 const log = logger.getLogger("ibcUtil")
 
 export async function getEmitXferMeta(chain:ChainClient, txId:string, blockNum:number):Promise<GetProofQuery> {
@@ -24,7 +25,7 @@ export async function getEmitXferMeta(chain:ChainClient, txId:string, blockNum:n
     })
 
     ws.addEventListener("message", (event:any) => {
-      log.debug(event) // DEBUG log
+      // log.debug(event) // DEBUG log
 
       const res = JSON.parse(event.data)
       log.debug("Received message from ibc getBlockActions", res) // DEBUG log
@@ -44,14 +45,15 @@ export async function getEmitXferMeta(chain:ChainClient, txId:string, blockNum:n
   })
 }
 
-export async function getProof(chain:ChainClient, queryData:GetProofQuery, type:ProofRequestType = "heavyProof"):Promise<ProofData> {
+export async function getProof(chain:ChainClient, queryData:GetProofQuery, last_proven_block?:number):Promise<ProofData> {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(chain.getProofSocket())
-
+    const type = last_proven_block ? "lightProof" : "heavyProof" // if we don't have last_proven_block then request heavy proof
     ws.addEventListener("open", (event) => {
       // connected to websocket server
       const query:Partial<ProofQuery> = { type, block_to_prove: queryData.block_to_prove }
       if (queryData.action_receipt_digest) query.action_receipt_digest = queryData.action_receipt_digest
+      if (type == "lightProof") query.last_proven_block = last_proven_block
       query.action_receipt = queryData.actionReceipt
       let auth_sequence = []
       for (let authSequence of query.action_receipt?.auth_sequence as any) auth_sequence.push(Object.values(authSequence))
@@ -72,8 +74,19 @@ export async function getProof(chain:ChainClient, queryData:GetProofQuery, type:
     })
   })
 }
+export async function getDestinationChain(tknRow:IbcToken, fromChainName:ChainKey, xferActionContract:NameType):Promise<ChainClient> {
+  const nativeChainName = tknRow.native_chain.toString() as ChainKey
+  const toNative = nativeChainName != fromChainName
+  if (toNative) return getChainClient(nativeChainName)
+  else {
+    const wlConfig = tknRow.wraplock_contracts.find(el => el.contract.toString() === xferActionContract)
+    if (!wlConfig) throwErr("No valid wraplock contract for sym contract", tknRow.symbol.toString(), xferActionContract.toString())
+    return getChainClient(wlConfig.destination_chain.toString() as ChainKey)
+  }
+}
 
-export async function makeXferProveAction(fromChain:ChainClient, requestData:GetProofQuery, proofData:ProofData) {
+export async function makeXferProveAction(fromChain:ChainClient, toChain:ChainClient, requestData:GetProofQuery, proofData:ProofData, type:ProofRequestType = "heavyProof", block_merkle_root?:string) {
+  if (type === "lightProof" && !block_merkle_root) throwErr("Block merkle root required for lightProof")
   const sym = requestData.action.decodeData(Emitxfer).xfer.quantity.quantity.symbol
   if (!proofData.actionproof) throwErr("No action proof found in proofData")
   let auth_sequence = []
@@ -85,27 +98,37 @@ export async function makeXferProveAction(fromChain:ChainClient, requestData:Get
     action: toObject(requestData.action),
     receipt: { ...requestData.actionReceipt }
   }
+  console.log("data:", data)
+
   let act:Action
-  let destinationChain:ChainClient
-  const contract = requestData.action.account.toString()
   const tknRow = await getIBCToken(fromChain, sym)
-  const toNative = tknRow.native_chain.toString() != fromChain.config.chain
+  const toNative = tknRow.native_chain.toString() != fromChain.name
   // fs.writeJsonSync("../data.json", data)
   if (toNative) {
-    destinationChain = getChainClient(tknRow.native_chain.toString() as ChainKey)
-    const destinationTokenRow = await getIBCToken(destinationChain, sym)
-    const wlContract = destinationTokenRow.wraplock_contracts.find(el => el.destination_chain.toString() === fromChain.config.chain)
+    // destinationChain = getChainClient(tknRow.native_chain.toString() as ChainKey)
+    const destinationTokenRow = await getIBCToken(toChain, sym)
+    console.log(JSON.stringify(destinationTokenRow, null, 2))
+    let chainName:string = fromChain.name
+    if (chainName === "tlos") chainName = "telos"
+    const wlContract = destinationTokenRow.wraplock_contracts.find(el => el.destination_chain.toString() === chainName)
+    console.log(fromChain.name)
+    console.log(JSON.stringify(destinationTokenRow, null, 2))
     if (!wlContract) throwErr("No matching wraplock contract found for sym", sym.toString())
-    act = actions.lockToken.withdrawA(data, wlContract.contract, tknRow.native_chain.toString() as ChainKey)
+    if (type == "lightProof") {
+      data.blockproof.root = block_merkle_root
+      act = actions.lockToken.withdrawB(data, wlContract.contract, tknRow.native_chain.toString() as ChainKey)
+    } else act = actions.lockToken.withdrawA(data, wlContract.contract, tknRow.native_chain.toString() as ChainKey)
   } else {
-    const wlConfig = tknRow.wraplock_contracts.find(el => el.contract.toString() === contract)
-    if (!wlConfig) throwErr("No valid wraplock contract for sym contract", sym, contract)
-    destinationChain = getChainClient(wlConfig.destination_chain.toString() as ChainKey)
-    const destinationTokenRow = await getIBCToken(destinationChain, sym)
-    log.debug(destinationChain.name, toObject(destinationTokenRow)) // DEBUG log
-
-    act = actions.wrapToken.issueA(data, destinationTokenRow.token_contract, destinationChain.name)
-    // act = Action.prototype
+    // const wlConfig = tknRow.wraplock_contracts.find(el => el.contract.toString() === contract)
+    // if (!wlConfig) throwErr("No valid wraplock contract for sym contract", sym, contract)
+    // destinationChain = getChainClient(wlConfig.destination_chain.toString() as ChainKey)
+    const destinationTokenRow = await getIBCToken(toChain, sym)
+    log.debug(toChain.name, toObject(destinationTokenRow)) // DEBUG log
+    // if (type == "lightProof") proofData. = lastBlockProvedRes.block_merkle_root
+    if (type == "lightProof") {
+      data.blockproof.root = block_merkle_root
+      act = actions.wrapToken.issueB(data, destinationTokenRow.token_contract, toChain.name)
+    } else act = actions.wrapToken.issueA(data, destinationTokenRow.token_contract, toChain.name)
   }
-  return { action: act, destinationChain }
+  return act
 }

@@ -8,3 +8,5 @@ dist
 greenlock.d
 yarn-error.log
 sync.sh
+
+.env

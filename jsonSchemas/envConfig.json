@@ -21,7 +21,7 @@
         "waxTest": {
           "$ref": "types.json#/definitions/eosioConfig"
         },
-        "telos": {
+        "tlos": {
           "$ref": "types.json#/definitions/eosioConfig"
         },
         "telosTest": {

@@ -1,25 +1,36 @@
-import { Action, PermissionLevel } from "@greymass/eosio"
-import fs from "fs-extra"
 import { getChainClient } from "lib/eosio"
 import { getEmitXferMeta, getProof, makeXferProveAction } from "lib/ibcUtil"
 import logger from "lib/logger"
-import { Withdrawa } from "lib/types/wraplock.types"
-import { Issuea, Issueb } from "lib/types/wraptoken.types"
-import { toObject } from "lib/utils"
+import { ProofRequestType } from "lib/types/ibc.types"
+import { throwErr } from "lib/utils"
 const log = logger.getLogger("test")
 
-const txid = "2abc492417057e511fdedf0ada0852f956a562253a1e09186d7dd38818cb0d6e"
-const blockNum = 323793294
+const txid = "afa5f09585eb4da54cc64c08f3f21a80c621e643e198cabd31ed78ea838170c3"
+const blockNum = 314265804
+const proofType:ProofRequestType = "lightProof"
 const chains = {
-  from: getChainClient("eos"),
-  to: getChainClient("telos")
+  from: getChainClient("tlos"),
+  to: getChainClient("eos")
+}
+let lastProvenBlock:number | undefined
+let block_merkle_root:string |undefined
+if (proofType === "lightProof") {
+  const lastProvenBlockRows = await chains.to.getTableRowsJson({ reverse: true, json: true, code: "ibc.prove", scope: chains.from.name, table: "lastproofs", limit: 1 })
+  // let light = lastBlockProvedRes && lastBlockProvedRes.block_height > block_to_prove;
+  console.log("lastProvenBlockRow", lastProvenBlockRows)
+  lastProvenBlock = lastProvenBlockRows[0].block_height
+  block_merkle_root = lastProvenBlockRows[0].block_merkle_root
+  if (!lastProvenBlock) throwErr("can't find lastProvenBlock for light proof")
 }
 
 try {
   const data = await getEmitXferMeta(chains.from, txid, blockNum)
-  const proof = await getProof(chains.from, data)
-  const { destinationChain, action } = await makeXferProveAction(chains.from, data, proof)
-  const result = await destinationChain.sendAction(action)
+  console.log(lastProvenBlock)
+  const proof = await getProof(chains.from, data, lastProvenBlock)
+  const action = await makeXferProveAction(chains.from, chains.to, data, proof, proofType, block_merkle_root)
+  console.log(JSON.stringify(action, null, 2))
+
+  const result = await chains.to.sendAction(action)
   console.log(result)
 } catch (error) {
   log.error(error)
