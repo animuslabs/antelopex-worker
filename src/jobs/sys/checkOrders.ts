@@ -86,6 +86,7 @@ async function checkOrders() {
           proof = await getProof(client, data, lastBlockProvedRes.block_height)
           action = await makeXferProveAction(client, toChain, data, proof, type, lastBlockProvedRes.block_merkle_root)
         }
+        console.log(JSON.stringify(action, null, 2))
         const result = await toChain.sendAction(action)
         log.debug(`Result for order ${order.trxid.toString()}: ${JSON.stringify(result)}`) // DEBUG log
 

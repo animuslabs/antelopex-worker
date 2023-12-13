@@ -75,11 +75,13 @@ export async function getProof(chain:ChainClient, queryData:GetProofQuery, last_
   })
 }
 export async function getDestinationChain(tknRow:IbcToken, fromChainName:ChainKey, xferActionContract:NameType):Promise<ChainClient> {
-  const nativeChainName = tknRow.native_chain.toString() as ChainKey
+  let nativeChainName = tknRow.native_chain.toString()
+  if (nativeChainName === "telos") nativeChainName = "tlos"
+  if (fromChainName as string === "telos") fromChainName = "tlos"
   const toNative = nativeChainName != fromChainName
-  if (toNative) return getChainClient(nativeChainName)
+  if (toNative) return getChainClient(nativeChainName as ChainKey)
   else {
-    const wlConfig = tknRow.wraplock_contracts.find(el => el.contract.toString() === xferActionContract)
+    const wlConfig = tknRow.wraplock_contracts.find(el => el.contract.toString() === xferActionContract.toString())
     if (!wlConfig) throwErr("No valid wraplock contract for sym contract", tknRow.symbol.toString(), xferActionContract.toString())
     return getChainClient(wlConfig.destination_chain.toString() as ChainKey)
   }
@@ -102,18 +104,19 @@ export async function makeXferProveAction(fromChain:ChainClient, toChain:ChainCl
 
   let act:Action
   const tknRow = await getIBCToken(fromChain, sym)
-  const toNative = tknRow.native_chain.toString() != fromChain.name
+  let fromChainName:string = fromChain.name
+  if (fromChainName === "tlos") fromChainName = "telos"
+  const toNative = tknRow.native_chain.toString() != fromChainName
   // fs.writeJsonSync("../data.json", data)
   if (toNative) {
     // destinationChain = getChainClient(tknRow.native_chain.toString() as ChainKey)
     const destinationTokenRow = await getIBCToken(toChain, sym)
     console.log(JSON.stringify(destinationTokenRow, null, 2))
-    let chainName:string = fromChain.name
-    if (chainName === "tlos") chainName = "telos"
-    const wlContract = destinationTokenRow.wraplock_contracts.find(el => el.destination_chain.toString() === chainName)
+
+    const wlContract = destinationTokenRow.wraplock_contracts.find(el => el.destination_chain.toString() === fromChainName)
     console.log(fromChain.name)
     console.log(JSON.stringify(destinationTokenRow, null, 2))
-    if (!wlContract) throwErr("No matching wraplock contract found for sym", sym.toString())
+    if (!wlContract) throwErr("No matching wraplock contract found for sym", sym.toString(), fromChainName)
     if (type == "lightProof") {
       data.blockproof.root = block_merkle_root
       act = actions.lockToken.withdrawB(data, wlContract.contract, tknRow.native_chain.toString() as ChainKey)

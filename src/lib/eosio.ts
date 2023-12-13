@@ -360,6 +360,7 @@ export const chainClients:Partial<Record<ChainKey, ChainClient>> = {}
 Object.values(configs).forEach((conf) => chainClients[conf.chain] = new ChainClient(conf.chain))
 
 export function getChainClient(chain:ChainKey):ChainClient {
+  if (chain as string === "telos") chain = "tlos"
   const client = chainClients[chain]
   if (!client) throw new Error(`No chain client active for '${chain}'`)
   return client

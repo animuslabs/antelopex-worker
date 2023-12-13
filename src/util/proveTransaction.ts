@@ -5,16 +5,16 @@ import { ProofRequestType } from "lib/types/ibc.types"
 import { throwErr } from "lib/utils"
 const log = logger.getLogger("test")
 
-const txid = "afa5f09585eb4da54cc64c08f3f21a80c621e643e198cabd31ed78ea838170c3"
-const blockNum = 314265804
-const proofType:ProofRequestType = "lightProof"
+const txid = "1f2b66d66d10fe8353acfe3ab7967cf94db2450a431d5035ce5155f5720f3c66"
+const blockNum = 314937923
+let proofType:ProofRequestType = "heavyProof"
 const chains = {
   from: getChainClient("tlos"),
   to: getChainClient("eos")
 }
 let lastProvenBlock:number | undefined
 let block_merkle_root:string |undefined
-if (proofType === "lightProof") {
+if (proofType as ProofRequestType == "lightProof") {
   const lastProvenBlockRows = await chains.to.getTableRowsJson({ reverse: true, json: true, code: "ibc.prove", scope: chains.from.name, table: "lastproofs", limit: 1 })
   // let light = lastBlockProvedRes && lastBlockProvedRes.block_height > block_to_prove;
   console.log("lastProvenBlockRow", lastProvenBlockRows)
