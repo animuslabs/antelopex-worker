@@ -90,6 +90,7 @@ export { configs }
 
 
 export function getConfig(chain:ChainKey):EosioConfig {
+  if (chain as string === "telos") chain = "tlos"
   const conf = configs[chain]
   if (!conf) throw new Error(`No config provided for chain: '${chain}'`)
   return conf
