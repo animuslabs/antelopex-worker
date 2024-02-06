@@ -72,7 +72,7 @@ async function checkOrders() {
         let toChain:ChainClient = await getDestinationChain(tknRow, client.name, data.action.account)
         const lastProvenBlockRows = await toChain.getTableRowsJson({ reverse: true, json: true, code: "ibc.prove", scope: client.name, table: "lastproofs", limit: 1 })
         const lastBlockProvedRes = lastProvenBlockRows[0]
-        await proveSchedules(client, toChain)
+        await proveSchedules(client, toChain).catch(log.error)
         let type:ProofRequestType
         if (!lastBlockProvedRes) type = "heavyProof"
         else if (lastBlockProvedRes.block_height > order.block_num) type = "lightProof"
