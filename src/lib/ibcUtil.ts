@@ -1,4 +1,4 @@
-import { Action, Asset, Checksum256, NameType } from "@greymass/eosio"
+import { Action, Asset, Checksum256, NameType, UInt32, UInt64 } from "@greymass/eosio"
 import fs from "fs-extra"
 import { actions } from "lib/actions"
 import { ChainClient, getChainClient } from "lib/eosio"
@@ -10,6 +10,8 @@ import { throwErr, toObject } from "lib/utils"
 import WebSocket from "ws"
 import logger from "lib/logger"
 import { IbcToken } from "lib/types/antelopex.system.types"
+import { Chainschedule, Checkproofd, Heavyproof, Lastproof, Schedulev2 } from "lib/types/ibc.prove.types"
+import { EosioConfig } from "lib/env"
 const log = logger.getLogger("ibcUtil")
 
 export async function getEmitXferMeta(chain:ChainClient, txId:string, blockNum:number):Promise<GetProofQuery> {
@@ -137,4 +139,110 @@ export async function makeXferProveAction(fromChain:ChainClient, toChain:ChainCl
     } else act = actions.wrapToken.issueA(data, destinationTokenRow.token_contract, toChain.name)
   }
   return act
+}
+
+async function getChainLastProved(chain:ChainClient) {
+  const res = await chain.getTableRows({
+    code: chain.config.contracts.bridge,
+    table: "lastproofs",
+    scope: chain.name,
+    limit: 1,
+    reverse: true,
+    show_payer: false,
+    json: true,
+    type: Lastproof
+  })
+  return res[0]
+}
+
+async function getProducerScheduleBlock(chain:ChainClient, blockNum:number):Promise<UInt32> {
+  try {
+    const block = await chain.getBlock({ block_num_or_id: blockNum })
+    let targetSchedule = block.schedule_version
+    log.debug("target_schedule", targetSchedule)
+
+    const lastBlockProvedRes = await getChainLastProved(chain)
+    if (!lastBlockProvedRes) throwErr(`No lastBlockProvedRes found for chain ${chain.name}`)
+    let minBlock = lastBlockProvedRes.block_height.toNumber() || 2
+    log.debug("min_block", minBlock)
+    let maxBlock = blockNum
+
+    while (maxBlock - minBlock > 1) {
+      blockNum = Math.round((maxBlock + minBlock) / 2)
+      const block = await chain.getBlock({ block_num_or_id: blockNum })
+      if (block.schedule_version < targetSchedule) {
+        minBlock = blockNum
+      } else {
+        maxBlock = blockNum
+      }
+    }
+
+    if (blockNum > 337) blockNum -= 337
+
+    let scheduleFound = block.new_producers
+    let bCount = 0 // Since header already checked once above
+
+    while (blockNum < maxBlock && !scheduleFound) {
+      blockNum++
+      bCount++
+      const block = await chain.getBlock({ block_num_or_id: blockNum })
+      scheduleFound = block.new_producers
+    }
+
+    if (!scheduleFound) {
+      blockNum -= 337 + bCount
+      do {
+        blockNum--
+        const block = await chain.getBlock({ block_num_or_id: blockNum })
+        scheduleFound = block.new_producers
+      } while (!scheduleFound)
+    }
+    return block.block_num
+  } catch (error) {
+    throwErr("getProducerScheduleBlock", error)
+  }
+}
+
+export async function getScheduleProofs(sourceChain:ChainClient, destinationChain:ChainClient):Promise<ProofData[]> {
+  const info = await sourceChain.getInfo()
+  const lib = info.last_irreversible_block_num
+  const proofs:ProofData[] = []
+
+  const bridgeScheduleData = (await destinationChain.getTableRows({
+    code: destinationChain.config.contracts.bridge,
+    table: "schedules",
+    scope: sourceChain.name,
+    limit: 1,
+    reverse: true,
+    show_payer: false,
+    json: true,
+    type: Chainschedule
+  }))[0]
+
+  let lastProvenScheduleVersion = bridgeScheduleData?.version
+  if (!lastProvenScheduleVersion) throwErr("Missing lastProvenScheduleVersion")
+  log.debug("Last proved source schedule:", lastProvenScheduleVersion.toString())
+
+  const sourceSchedule = await sourceChain.getProducerSchedule()
+  let scheduleVersion = sourceSchedule.active.version
+  log.debug("Source active schedule:", scheduleVersion)
+
+  let scheduleBlock = lib
+  while (scheduleVersion > lastProvenScheduleVersion.toNumber()) {
+    let blockNum = await getProducerScheduleBlock(sourceChain, scheduleBlock.toNumber())
+
+    const proofQueryData:GetProofQuery = { block_to_prove: blockNum.toNumber() } as GetProofQuery // Simplified, adapt according to actual needs
+    const proof = await getProof(sourceChain, proofQueryData) // Assuming getProof function exists and operates similarly to described
+    if (!proof) throwErr("proof not found for block", blockNum)
+
+    scheduleVersion = proof.blockproof.blocktoprove.block.header.schedule_version
+    scheduleBlock = UInt32.from(blockNum)
+    proofs.unshift(proof)
+  };
+
+  return proofs
+}
+
+export function makeScheduleProofAction(proof:ProofData, destinationConfig:EosioConfig):Action {
+  return actions.bridge.checkproofD(Heavyproof.from(proof.blockproof), destinationConfig.chain)
 }

@@ -131,7 +131,7 @@ export class Chain extends Struct {
 @Struct.type("producer_authority")
 export class ProducerAuthority extends Struct {
   @Struct.field(Name) producer_name!:Name
-  @Struct.field(BlockSigningAuthority) authority!:BlockSigningAuthority
+  // @Struct.field(BlockSigningAuthority) authority!:BlockSigningAuthority
 }
 
 @Struct.type("schedulev2")

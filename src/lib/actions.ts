@@ -1,6 +1,6 @@
 import { Action, Asset, NameType, UInt32 } from "@greymass/eosio"
 import { getConfig } from "lib/env"
-import { Actionproof, Heavyproof, Lightproof } from "lib/types/ibc.prove.types"
+import { Actionproof, Checkproofd, Heavyproof, Lightproof } from "lib/types/ibc.prove.types"
 import { ChainKey } from "lib/types/ibc.types"
 import { Withdrawa, Withdrawb } from "lib/types/wraplock.types"
 import { Issuea, Issueb, Retire } from "lib/types/wraptoken.types"
@@ -28,6 +28,9 @@ export const actions = {
     withdrawB: (
       data:{ blockproof:Lightproof, actionproof:Actionproof }, contract:NameType, chain:ChainKey) =>
       createAct("withdrawb", Withdrawb.from({ ...data, prover: getConfig(chain).worker.account }), contract, chain)
+  },
+  bridge: {
+    checkproofD: (blockproof:Heavyproof, chain:ChainKey, contract:NameType = "ibc.prove") => createAct("checkproofd", Checkproofd.from({ blockproof }), contract, chain)
   }
 
 

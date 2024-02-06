@@ -10,6 +10,7 @@ import { Action, UInt64 } from "@greymass/eosio"
 import { Emitxfer } from "lib/types/wraplock.types"
 import { getIBCToken } from "lib/ibcTokens"
 import { ProofData, ProofRequestType } from "lib/types/ibc.types"
+import { proveSchedules } from "jobs/sys/ proveScheduleChange"
 
 async function checkOrders() {
   for (const client of Object.values(chainClients)) {
@@ -71,8 +72,7 @@ async function checkOrders() {
         let toChain:ChainClient = await getDestinationChain(tknRow, client.name, data.action.account)
         const lastProvenBlockRows = await toChain.getTableRowsJson({ reverse: true, json: true, code: "ibc.prove", scope: client.name, table: "lastproofs", limit: 1 })
         const lastBlockProvedRes = lastProvenBlockRows[0]
-
-
+        await proveSchedules(client, toChain)
         let type:ProofRequestType
         if (!lastBlockProvedRes) type = "heavyProof"
         else if (lastBlockProvedRes.block_height > order.block_num) type = "lightProof"

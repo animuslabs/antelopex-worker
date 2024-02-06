@@ -75,7 +75,7 @@ export class ChainClient {
       client = new APIClient({ provider })
       return { endpoint: el, rpc: client.v1.chain }
     })
-    this.cache = caching("memory", { max: 100, ttl: ms("12s") })
+    this.cache = caching("memory", { max: 100, ttl: ms("5s") })
   }
 
   get name():ChainKey {

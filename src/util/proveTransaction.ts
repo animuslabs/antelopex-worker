@@ -12,6 +12,7 @@ const chains = {
   from: getChainClient("tlos"),
   to: getChainClient("eos")
 }
+
 let lastProvenBlock:number | undefined
 let block_merkle_root:string |undefined
 if (proofType as ProofRequestType == "lightProof") {
