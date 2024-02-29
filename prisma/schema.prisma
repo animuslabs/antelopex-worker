@@ -24,3 +24,19 @@ model IBCOrder {
   @@index([originTxid])
   @@index([blockNum])
 }
+
+model SpecialOrder {
+  originChain      String
+  originTxid       String   @unique
+  destinationChain String?
+  detinationTxid   String?  @unique
+  relayed          Boolean  @default(false)
+  relayError       String?
+  createdAt        DateTime @id @default(now())
+  blockNum         BigInt
+  shouldRetry      Boolean  @default(true)
+  orderId          BigInt   @unique
+
+  @@index([originTxid])
+  @@index([orderId])
+}

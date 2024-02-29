@@ -9,7 +9,48 @@
       "cron_restart": "0 */1 * * *",
       "env": {
         "LOGLEVEL": "DEBUG",
-        "NODE_NO_WARNINGS": "1",
+        "NODE_OPTIONS": "--enable-source-maps"
+      },
+      "args": [
+        "--color"
+      ]
+    },
+    {
+      "name": "antelopex-checkSpecialOrders",
+      "cwd": "./dist",
+      "script": "./jobs/sys/checkSpecialOrders.js",
+      "autorestart": true,
+      "cron_restart": "0 */1 * * *",
+      "env": {
+        "LOGLEVEL": "DEBUG",
+        "NODE_OPTIONS": "--enable-source-maps"
+      },
+      "args": [
+        "--color"
+      ]
+    },
+    {
+      "name": "antelopex-retryOrders",
+      "cwd": "./dist",
+      "script": "./jobs/sys/retryOrders.js",
+      "autorestart": true,
+      "cron_restart": "0 */1 * * *",
+      "env": {
+        "LOGLEVEL": "DEBUG",
+        "NODE_OPTIONS": "--enable-source-maps"
+      },
+      "args": [
+        "--color"
+      ]
+    },
+    {
+      "name": "antelopex-retrySpecialOrders",
+      "cwd": "./dist",
+      "script": "./jobs/sys/retrySpecialOrders.js",
+      "autorestart": true,
+      "cron_restart": "0 */1 * * *",
+      "env": {
+        "LOGLEVEL": "DEBUG",
         "NODE_OPTIONS": "--enable-source-maps"
       },
       "args": [
