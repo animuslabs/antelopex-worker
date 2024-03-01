@@ -36,9 +36,9 @@ export async function getEmitXferMeta(chain:ChainClient, txId:string, blockNum:n
       if (res.type !== "getBlockActions") return
       ws.close()
       const action_receipt = res.txs.filter((t:any) => t[0].transactionId.toUpperCase() === txId.toUpperCase())
-      if (action_receipt.length !== 1) throwErr("Action receipt for trx with txId", txId, "not found in block", blockNum, action_receipt)
+      if (action_receipt.length !== 1) return reject(new Error("Action receipt for trx with txId "+ txId+ " not found in block "+ blockNum+" "+ action_receipt))
       const action_data = action_receipt[0].find((a:any) => a.action.name === "emitxfer")
-      if (!action_data) throwErr("Action emitxfer not found in transaction")
+      if (!action_data) return reject(new Error("Action emitxfer not found in transaction"))
       log.debug(action_data.action)
       if (!action_data.action.data) action_data.action.data = [0]
       const actionData = Action.from(action_data.action)

@@ -29,10 +29,10 @@ export async function prepareSpecialOrders(client:ChainClient) {
   let orders:IbcSpecialOrder[] = []
   if (oldestRecord) {
     log.info("oldest spcialOrder Id for chain:", oldestRecord?.orderId.toString(), "getting special orders after this orderId")
-    orders = await client.getTableRows({ table: "specialorders", code: conf.contracts.system, lower_bound: UInt64.from(oldestRecord.orderId + BigInt(1)), type: IbcSpecialOrder, limit: 5 })
+    orders = await client.getTableRows({ table: "specialorder", code: conf.contracts.system, lower_bound: UInt64.from(oldestRecord.orderId + BigInt(1)), type: IbcSpecialOrder, limit: 5 })
   } else {
     log.info(`Fetching full table for chain: ${client.name}`) // DEBUG log
-    orders = await client.getFullTable({ tableName: "specialorders", contract: conf.contracts.system }, IbcSpecialOrder)
+    orders = await client.getFullTable({ tableName: "specialorder", contract: conf.contracts.system }, IbcSpecialOrder)
   }
   let filteredOrders:IbcSpecialOrder[] = []
   const info = await client.getInfo()

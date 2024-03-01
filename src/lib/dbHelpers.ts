@@ -4,6 +4,11 @@ import { ChainKey } from "lib/types/ibc.types"
 import { IBCOrder, SpecialOrder } from "@prisma/client"
 
 
+function shouldRetry(errorMsg:string) {
+  if (errorMsg.includes("Action emitxfer not found in transaction")) return false
+  return true
+}
+
 export function newIBCOrder(chain:ChainKey, order:IbcOrder) {
   return db.iBCOrder.create({ data: { blockNum: order.block_num.toNumber(), originChain: chain, originTxid: order.trxid.toString() }})
 }
@@ -12,10 +17,10 @@ export function newIBCSpecialOrder(chain:ChainKey, order:IbcSpecialOrder) {
 }
 
 export function addIBCOrderError(order:IbcOrder, error:Error) {
-  return db.iBCOrder.update({ where: { originTxid: order.trxid.toString() }, data: { relayError: error.toString() }})
+  return db.iBCOrder.update({ where: { originTxid: order.trxid.toString() }, data: { relayError: error.toString(), shouldRetry: shouldRetry(error.message) }})
 }
-export function addIBCSpecialOrderError(order:IbcSpecialOrder, error:Error, shouldRetry:boolean = true) {
-  return db.specialOrder.update({ where: { originTxid: order.trxid.toString() }, data: { relayError: error.toString(), shouldRetry }})
+export function addIBCSpecialOrderError(order:IbcSpecialOrder, error:Error) {
+  return db.specialOrder.update({ where: { originTxid: order.trxid.toString() }, data: { relayError: error.toString(), shouldRetry: shouldRetry(error.message) }})
 }
 
 export function orderRelayed(order:IbcOrder, detinationTxid:string, destinationChain:ChainKey) {
