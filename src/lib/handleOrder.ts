@@ -3,7 +3,7 @@ import { proveSchedules } from "lib/ proveScheduleChange"
 import { UpdateOrderError, UpdateSpecialOrderError, addIBCOrderError, addIBCSpecialOrderError, orderRelayed, specialOrderRelayed } from "lib/dbHelpers"
 import { ChainClient } from "lib/eosio"
 import { getIBCToken } from "lib/ibcTokens"
-import { getDestinationChain, getEmitXferMeta, getProof, makeXferProveAction } from "lib/ibcUtil"
+import { getDestinationChain, findAction, getProof, makeXferProveAction } from "lib/ibcUtil"
 import logger from "lib/logger"
 import { IbcOrder, IbcSpecialOrder } from "lib/types/antelopex.system.types"
 import { ProofData, ProofRequestType } from "lib/types/ibc.types"
@@ -15,7 +15,7 @@ export async function handleOrder(order:IbcSpecialOrder|IbcOrder, client:ChainCl
   const specialOrder = "id" in order
   try {
     log.debug(`Processing special order: ${order.trxid.toString()}`) // DEBUG log
-    const data = await getEmitXferMeta(client, order.trxid.toString(), order.block_num.toNumber())
+    const data = await findAction(client, order.trxid.toString(), order.block_num.toNumber())
     const sym = data.action.decodeData(Emitxfer).xfer.quantity.quantity.symbol
     const tknRow = await getIBCToken(client, sym)
     let toChain:ChainClient = await getDestinationChain(tknRow, client.name, data.action.account)

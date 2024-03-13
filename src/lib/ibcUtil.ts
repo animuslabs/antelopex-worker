@@ -12,9 +12,12 @@ import logger from "lib/logger"
 import { IbcToken } from "lib/types/antelopex.system.types"
 import { Chainschedule, Checkproofd, Heavyproof, Lastproof, Schedulev2 } from "lib/types/ibc.prove.types"
 import { EosioConfig } from "lib/env"
+import { Types as WrapToken } from "lib/types/wraptoken.nft.types"
+import { Types as WrapLock } from "lib/types/wraplock.nft.types"
 const log = logger.getLogger("ibcUtil")
 
-export async function getEmitXferMeta(chain:ChainClient, txId:string, blockNum:number):Promise<GetProofQuery> {
+export async function findAction(chain:ChainClient, txId:string, blockNum:number):Promise<GetProofQuery> {
+  let actionNames = ["emitxfer", "emitnftxfer", "nftidxfer", "emitschema"]
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(chain.getProofSocket())
     ws.addEventListener("open", (event) => {
@@ -36,9 +39,19 @@ export async function getEmitXferMeta(chain:ChainClient, txId:string, blockNum:n
       if (res.type !== "getBlockActions") return
       ws.close()
       const action_receipt = res.txs.filter((t:any) => t[0].transactionId.toUpperCase() === txId.toUpperCase())
-      if (action_receipt.length !== 1) return reject(new Error("Action receipt for trx with txId "+ txId+ " not found in block "+ blockNum+" "+ action_receipt))
-      const action_data = action_receipt[0].find((a:any) => a.action.name === "emitxfer")
-      if (!action_data) return reject(new Error("Action emitxfer not found in transaction"))
+      if (action_receipt.length !== 1) return reject(new Error("Action receipt for trx with txId " + txId + " not found in block " + blockNum + " " + action_receipt))
+      // loop through the actionNames to find the one that exists
+      let actionName:string | undefined
+      let action_data
+      while (!action_data && actionNames.length > 0) {
+        actionName = actionNames.shift()
+        if (!actionName) return reject(new Error("No valid actionName found"))
+        action_data = action_receipt[0].find((a:any) => {
+          console.log(a.action.name)
+          return a.action.name === actionName
+        })
+      }
+      if (!action_data) return reject(new Error("Action not found in transaction: " + actionName))
       log.debug(action_data.action)
       if (!action_data.action.data) action_data.action.data = [0]
       const actionData = Action.from(action_data.action)
@@ -48,6 +61,7 @@ export async function getEmitXferMeta(chain:ChainClient, txId:string, blockNum:n
     })
   })
 }
+
 
 export async function getProof(chain:ChainClient, queryData:GetProofQuery, last_proven_block?:number):Promise<ProofData> {
   return new Promise((resolve, reject) => {
@@ -138,6 +152,88 @@ export async function makeXferProveAction(fromChain:ChainClient, toChain:ChainCl
       act = actions.wrapToken.issueB(data, destinationTokenRow.token_contract, toChain.name)
     } else act = actions.wrapToken.issueA(data, destinationTokenRow.token_contract, toChain.name)
   }
+  return act
+}
+export async function makeNftXferProveAction(fromChain:ChainClient, toChain:ChainClient, requestData:GetProofQuery, proofData:ProofData, type:ProofRequestType = "heavyProof", block_merkle_root?:string) {
+  if (type === "lightProof" && !block_merkle_root) throwErr("Block merkle root required for lightProof")
+  if (!proofData.actionproof) throwErr("No action proof found in proofData")
+  let auth_sequence = []
+  for (let authSequence of requestData.actionReceipt.auth_sequence) auth_sequence.push({ account: authSequence[0], sequence: authSequence[1] })
+  requestData.actionReceipt.auth_sequence = auth_sequence
+  let data:any = { ...proofData }
+  data.actionproof = {
+    ...proofData.actionproof,
+    action: toObject(requestData.action),
+    receipt: { ...requestData.actionReceipt }
+  }
+  console.log("data:", data)
+
+  let act:Action
+  // const tknRow = await getIBCToken(fromChain, sym)
+  let fromChainName:string = fromChain.name
+  if (fromChainName === "tlos") fromChainName = "telos"
+
+  const nativeGlobal = (await fromChain.getTableRows({ code: requestData.action.account, table: "global", limit: 1, type: WrapLock.global as any })) as WrapLock.global[]
+  const global = nativeGlobal[0]
+  if (!global) throwErr("Native global data row not found")
+
+  if (type == "lightProof") {
+    data.blockproof.root = block_merkle_root
+    act = actions.wrapToken.issueB(data, global.paired_wrapnft_contract.toString(), toChain.name)
+  } else act = actions.wrapToken.issueA(data, global.paired_wrapnft_contract.toString(), toChain.name)
+
+  return act
+}
+function prepareProofData(requestData:GetProofQuery, proofData:ProofData, type:ProofRequestType = "heavyProof", block_merkle_root?:string) {
+  if (type === "lightProof" && !block_merkle_root) throwErr("Block merkle root required for lightProof")
+  if (!proofData.actionproof) throwErr("No action proof found in proofData")
+  let auth_sequence = []
+  for (let authSequence of requestData.actionReceipt.auth_sequence) auth_sequence.push({ account: authSequence[0], sequence: authSequence[1] })
+  requestData.actionReceipt.auth_sequence = auth_sequence
+  let data:any = { ...proofData }
+  data.actionproof = {
+    ...proofData.actionproof,
+    action: toObject(requestData.action),
+    receipt: { ...requestData.actionReceipt }
+  }
+  return data
+}
+export async function makeNftIdXferProveAction(fromChain:ChainClient, toChain:ChainClient, requestData:GetProofQuery, proofData:ProofData, type:ProofRequestType = "heavyProof", block_merkle_root?:string) {
+  const data = prepareProofData(requestData, proofData, type, block_merkle_root)
+  console.log("data:", data)
+
+  let act:Action
+  let fromChainName:string = fromChain.name
+  if (fromChainName === "tlos") fromChainName = "telos"
+
+  const foreignGlobal = (await fromChain.getTableRows({ code: requestData.action.account, table: "global", limit: 1, type: WrapToken.global as any })) as WrapToken.global[]
+  const global = foreignGlobal[0]
+  if (!global) throwErr("Native global data row not found")
+
+  if (type == "lightProof") {
+    data.blockproof.root = block_merkle_root
+    act = actions.lockToken.withdrawB(data, global.paired_wraplock_contract.toString(), toChain.name)
+  } else act = actions.lockToken.withdrawA(data, global.paired_wraplock_contract.toString(), toChain.name)
+
+  return act
+}
+export async function makeEmitSchemaProveAction(fromChain:ChainClient, toChain:ChainClient, requestData:GetProofQuery, proofData:ProofData, type:ProofRequestType = "heavyProof", block_merkle_root?:string) {
+  const data = prepareProofData(requestData, proofData, type, block_merkle_root)
+  console.log("data:", data)
+
+  let act:Action
+  let fromChainName:string = fromChain.name
+  if (fromChainName === "tlos") fromChainName = "telos"
+
+  const nativeGlobal = (await fromChain.getTableRows({ code: requestData.action.account, table: "global", limit: 1, type: WrapLock.global as any })) as WrapLock.global[]
+  const global = nativeGlobal[0]
+  if (!global) throwErr("Native global data row not found")
+
+  if (type == "lightProof") {
+    data.blockproof.root = block_merkle_root
+    act = actions.wrapToken.initschemaB(data, global.paired_wrapnft_contract.toString(), toChain.name)
+  } else act = actions.wrapToken.initschemaA(data, global.paired_wrapnft_contract.toString(), toChain.name)
+
   return act
 }
 

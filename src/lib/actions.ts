@@ -4,6 +4,8 @@ import { Actionproof, Checkproofd, Heavyproof, Lightproof } from "lib/types/ibc.
 import { ChainKey } from "lib/types/ibc.types"
 import { Withdrawa, Withdrawb } from "lib/types/wraplock.types"
 import { Issuea, Issueb, Retire } from "lib/types/wraptoken.types"
+import { Types as WrapToken } from "lib/types/wraptoken.nft.types"
+import { Types as WrapLock } from "lib/types/wraplock.nft.types"
 
 
 function createAct(name:string, data:Record<string, any> = {}, account:NameType, chain:ChainKey) {
@@ -19,7 +21,13 @@ export const actions = {
       createAct("issuea", Issuea.from({ ...data, prover: getConfig(chain).worker.account }), contract, chain),
     issueB: (
       data:{ blockproof:Lightproof, actionProof:Actionproof }, contract:NameType, chain:ChainKey) =>
-      createAct("issueb", Issueb.from({ ...data, prover: getConfig(chain).worker.account }), contract, chain)
+      createAct("issueb", Issueb.from({ ...data, prover: getConfig(chain).worker.account }), contract, chain),
+    initschemaA: (
+      data:{ blockProof:Heavyproof, actionProof:Actionproof }, contract:NameType, chain:ChainKey) =>
+      createAct("initschemaa", WrapToken.initschemaa.from({ ...data, prover: getConfig(chain).worker.account }), contract, chain),
+    initschemaB: (
+      data:{ blockproof:Lightproof, actionProof:Actionproof }, contract:NameType, chain:ChainKey) =>
+      createAct("initschemab", WrapToken.initschemab.from({ ...data, prover: getConfig(chain).worker.account }), contract, chain)
   },
   lockToken: {
     withdrawA: (
