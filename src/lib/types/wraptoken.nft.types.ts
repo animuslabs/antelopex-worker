@@ -18,12 +18,7 @@ import {
   BlockTimestamp,
   Bytes,
   Checksum256,
-  Float32,
-  Float64,
-  Int16,
   Int32,
-  Int64,
-  Int8,
   Name,
   PublicKey,
   Signature,
@@ -31,68 +26,15 @@ import {
   UInt16,
   UInt32,
   UInt64,
-  UInt8,
-  VarUInt,
-  Variant
+  VarUInt
 } from "@wharfkit/antelope"
 import type { ActionOptions, ContractArgs, PartialBy, Table } from "@wharfkit/contract"
 import { Contract as BaseContract } from "@wharfkit/contract"
 export const abiBlob = Blob.from(
-  "DmVvc2lvOjphYmkvMS4yDRBBVE9NSUNfQVRUUklCVVRFwgF2YXJpYW50X2ludDhfaW50MTZfaW50MzJfaW50NjRfdWludDhfdWludDE2X3VpbnQzMl91aW50NjRfZmxvYXQzMl9mbG9hdDY0X3N0cmluZ19JTlQ4X1ZFQ19JTlQxNl9WRUNfSU5UMzJfVkVDX0lOVDY0X1ZFQ19VSU5UOF9WRUNfVUlOVDE2X1ZFQ19VSU5UMzJfVkVDX1VJTlQ2NF9WRUNfRkxPQVRfVkVDX0RPVUJMRV9WRUNfU1RSSU5HX1ZFQw1BVFRSSUJVVEVfTUFQHnBhaXJfc3RyaW5nX0FUT01JQ19BVFRSSUJVVEVbXQpET1VCTEVfVkVDCWZsb2F0NjRbXQlGTE9BVF9WRUMJZmxvYXQzMltdCUlOVDE2X1ZFQwdpbnQxNltdCUlOVDMyX1ZFQwdpbnQzMltdCUlOVDY0X1ZFQwdpbnQ2NFtdCElOVDhfVkVDBWJ5dGVzClNUUklOR19WRUMIc3RyaW5nW10KVUlOVDE2X1ZFQwh1aW50MTZbXQpVSU5UMzJfVkVDCHVpbnQzMltdClVJTlQ2NF9WRUMIdWludDY0W10JVUlOVDhfVkVDBWJ5dGVzKAZhY3Rpb24ABAdhY2NvdW50BG5hbWUEbmFtZQRuYW1lDWF1dGhvcml6YXRpb24ScGVybWlzc2lvbl9sZXZlbFtdBGRhdGEFYnl0ZXMLYWN0aW9ucHJvb2YABAZhY3Rpb24GYWN0aW9uB3JlY2VpcHQKYWN0cmVjZWlwdAtyZXR1cm52YWx1ZQVieXRlcwthbXByb29mcGF0aA1jaGVja3N1bTI1NltdCmFjdHJlY2VpcHQABwhyZWNlaXZlcgRuYW1lCmFjdF9kaWdlc3QLY2hlY2tzdW0yNTYPZ2xvYmFsX3NlcXVlbmNlBnVpbnQ2NA1yZWN2X3NlcXVlbmNlBnVpbnQ2NA1hdXRoX3NlcXVlbmNlCWF1dGhzZXFbXQ1jb2RlX3NlcXVlbmNlCXZhcnVpbnQzMgxhYmlfc2VxdWVuY2UJdmFydWludDMyC2FuY2hvcmJsb2NrAAMFYmxvY2sMc2Jsb2NraGVhZGVyDGFjdGl2ZV9ub2Rlcwh1aW50MTZbXQpub2RlX2NvdW50BnVpbnQ2NAhhc3NldHNfcwAICGFzc2V0X2lkBnVpbnQ2NA9jb2xsZWN0aW9uX25hbWUEbmFtZQtzY2hlbWFfbmFtZQRuYW1lC3RlbXBsYXRlX2lkBWludDMyCXJhbV9wYXllcgRuYW1lDWJhY2tlZF90b2tlbnMHYXNzZXRbXRlpbW11dGFibGVfc2VyaWFsaXplZF9kYXRhBWJ5dGVzF211dGFibGVfc2VyaWFsaXplZF9kYXRhBWJ5dGVzB2F1dGhzZXEAAgdhY2NvdW50BG5hbWUIc2VxdWVuY2UGdWludDY0C2Jsb2NraGVhZGVyAAkJdGltZXN0YW1wFGJsb2NrX3RpbWVzdGFtcF90eXBlCHByb2R1Y2VyBG5hbWUJY29uZmlybWVkBnVpbnQxNghwcmV2aW91cwtjaGVja3N1bTI1NhF0cmFuc2FjdGlvbl9tcm9vdAtjaGVja3N1bTI1NgxhY3Rpb25fbXJvb3QLY2hlY2tzdW0yNTYQc2NoZWR1bGVfdmVyc2lvbgZ1aW50MzINbmV3X3Byb2R1Y2VycxJwcm9kdWNlcl9zY2hlZHVsZT8RaGVhZGVyX2V4dGVuc2lvbnMTcGFpcl91aW50MTZfYnl0ZXNbXQdjYW5jZWxhAAMGcHJvdmVyBG5hbWUKYmxvY2twcm9vZgpoZWF2eXByb29mC2FjdGlvbnByb29mC2FjdGlvbnByb29mB2NhbmNlbGIAAwZwcm92ZXIEbmFtZQpibG9ja3Byb29mCmxpZ2h0cHJvb2YLYWN0aW9ucHJvb2YLYWN0aW9ucHJvb2YHZGlzYWJsZQAADGVtaXRlbXBsYXRlcwAED2NvbGxlY3Rpb25fbmFtZQRuYW1lC3RlbXBsYXRlX2lkBWludDMyC3NjaGVtYV9uYW1lBG5hbWUXdGVtcGxhdGVfaW1tdXRhYmxlX2RhdGENQVRUUklCVVRFX01BUAZlbmFibGUAAAZnbG9iYWwABghjaGFpbl9pZAtjaGVja3N1bTI1Ng9icmlkZ2VfY29udHJhY3QEbmFtZQ9wYWlyZWRfY2hhaW5faWQLY2hlY2tzdW0yNTYYcGFpcmVkX3dyYXBsb2NrX2NvbnRyYWN0BG5hbWUVcGFpcmVkX3Rva2VuX2NvbnRyYWN0BG5hbWUHZW5hYmxlZARib29sCmhlYXZ5cHJvb2YABAhjaGFpbl9pZAtjaGVja3N1bTI1NgZoYXNoZXMNY2hlY2tzdW0yNTZbXQxibG9ja3RvcHJvdmULYW5jaG9yYmxvY2sIYmZ0cHJvb2YOc2Jsb2NraGVhZGVyW10IaHBzdHJ1Y3QAAgJpZAZ1aW50NjQCaHAKaGVhdnlwcm9vZgRpbml0AAQIY2hhaW5faWQLY2hlY2tzdW0yNTYPYnJpZGdlX2NvbnRyYWN0BG5hbWUPcGFpcmVkX2NoYWluX2lkC2NoZWNrc3VtMjU2GHBhaXJlZF93cmFwbG9ja19jb250cmFjdARuYW1lC2luaXRzY2hlbWFhAAMGcHJvdmVyBG5hbWUKYmxvY2twcm9vZgpoZWF2eXByb29mC2FjdGlvbnByb29mC2FjdGlvbnByb29mC2luaXRzY2hlbWFiAAMGcHJvdmVyBG5hbWUKYmxvY2twcm9vZgpsaWdodHByb29mC2FjdGlvbnByb29mC2FjdGlvbnByb29mBmlzc3VlYQADBnByb3ZlcgRuYW1lCmJsb2NrcHJvb2YKaGVhdnlwcm9vZgthY3Rpb25wcm9vZgthY3Rpb25wcm9vZgZpc3N1ZWIAAwZwcm92ZXIEbmFtZQpibG9ja3Byb29mCmxpZ2h0cHJvb2YLYWN0aW9ucHJvb2YLYWN0aW9ucHJvb2YKbGlnaHRwcm9vZgAECGNoYWluX2lkC2NoZWNrc3VtMjU2BmhlYWRlcgtibG9ja2hlYWRlcgRyb290C2NoZWNrc3VtMjU2C2JtcHJvb2ZwYXRoDWNoZWNrc3VtMjU2W10IbHBzdHJ1Y3QAAgJpZAZ1aW50NjQCbHAKbGlnaHRwcm9vZgltZXRhbWFwcm0AARdmb3JlaWduX2NvbGxlY3Rpb25fbmFtZQRuYW1lCm1ldGFtYXBzZXQAAQltYXBfZW50cnkKbmZ0bWV0YW1hcAhuZnRpZG1hcAACDmxvY2FsX2Fzc2V0X2lkBnVpbnQ2NBBmb3JlaWduX2Fzc2V0X2lkBnVpbnQ2NAluZnRpZHhmZXIAAQluZnRpZHhmZXIKbmZ0aWR4ZmVycwpuZnRpZHhmZXJzAAMJYXNzZXRfaWRzCHVpbnQ2NFtdC2JlbmVmaWNpYXJ5BG5hbWUEbWVtbwZzdHJpbmcKbmZ0bWV0YW1hcAACF2ZvcmVpZ25fY29sbGVjdGlvbl9uYW1lBG5hbWUVbG9jYWxfY29sbGVjdGlvbl9uYW1lBG5hbWUHbmZ0eGZlcgAEBW93bmVyBG5hbWUGYXNzZXRzCmFzc2V0c19zW10LYmVuZWZpY2lhcnkEbmFtZQRtZW1vBnN0cmluZxxwYWlyX3N0cmluZ19BVE9NSUNfQVRUUklCVVRFAAIFZmlyc3QGc3RyaW5nBnNlY29uZBBBVE9NSUNfQVRUUklCVVRFEXBhaXJfdWludDE2X2J5dGVzAAIFZmlyc3QGdWludDE2BnNlY29uZAVieXRlcxBwZXJtaXNzaW9uX2xldmVsAAIFYWN0b3IEbmFtZQpwZXJtaXNzaW9uBG5hbWUJcHJvY2Vzc2VkAAICaWQGdWludDY0DnJlY2VpcHRfZGlnZXN0C2NoZWNrc3VtMjU2DHByb2R1Y2VyX2tleQACDXByb2R1Y2VyX25hbWUEbmFtZRFibG9ja19zaWduaW5nX2tleQpwdWJsaWNfa2V5EXByb2R1Y2VyX3NjaGVkdWxlAAIHdmVyc2lvbgZ1aW50MzIJcHJvZHVjZXJzDnByb2R1Y2VyX2tleVtdDHNibG9ja2hlYWRlcgAEBmhlYWRlcgtibG9ja2hlYWRlchNwcm9kdWNlcl9zaWduYXR1cmVzC3NpZ25hdHVyZVtdD3ByZXZpb3VzX2Jtcm9vdAtjaGVja3N1bTI1NgtibXByb29mcGF0aAh1aW50MTZbXQt0ZW1wbGF0ZW1hcAACE2ZvcmVpZ25fdGVtcGxhdGVfaWQFaW50MzIRbG9jYWxfdGVtcGxhdGVfaWQFaW50MzIJdGVtcG1hcHJtAAIdZm9yZWlnbl9jb2xsZWN0aW9uX25hbWVfc2NvcGUEbmFtZRNmb3JlaWduX3RlbXBsYXRlX2lkBWludDMyCnRlbXBtYXBzZXQAAh1mb3JlaWduX2NvbGxlY3Rpb25fbmFtZV9zY29wZQRuYW1lDHRlbXBsYXRlX21hcAt0ZW1wbGF0ZW1hcAl0ZW1wbmZ0aWQAAxBmb3JlaWduX2Fzc2V0X2lkBnVpbnQ2NApiZW5maWNpYXJ5BG5hbWUEbWVtbwZzdHJpbmcOAAAAwESFpkEHY2FuY2VsYQAAAADgRIWmQQdjYW5jZWxiAAAAAEDFY7BLB2Rpc2FibGUAAAAAAKh4zFQGZW5hYmxlAAAAAAAAkN10BGluaXQAAIyRqiGc3XQLaW5pdHNjaGVtYWEAAI6RqiGc3XQLaW5pdHNjaGVtYWIAAAAAABilMXYGaXNzdWVhAAAAAAAcpTF2Bmlzc3VlYgAAAJC3GmmykgltZXRhbWFwcm0AAEBWuBppspIKbWV0YW1hcHNldAAAALhq9eTymgluZnRpZHhmZXIAAACQtxpZpcoJdGVtcG1hcHJtAABAVrgaWaXKCnRlbXBtYXBzZXQAC4BVNrFKlZ1UA2k2NAAADGVtaXRlbXBsYXRlcwAAAABEc2hkA2k2NAAABmdsb2JhbADAovRWv41qA2k2NAAACGhwc3RydWN0AMCi9NbcmIsDaTY0AAAIbHBzdHJ1Y3QAAADVyOTymgNpNjQAAAhuZnRpZG1hcAAAvmr15PKaA2k2NAAACm5mdGlkeGZlcnMAQDXSZCXzmgNpNjQAAApuZnRtZXRhbWFwAAAA4KrV85oDaTY0AAAHbmZ0eGZlcgAASApjheitA2k2NAAACXByb2Nlc3NlZACqkSqbWKXKA2k2NAAAC3RlbXBsYXRlbWFwAABILq9ZpcoDaTY0AAAJdGVtcG5mdGlkAAAAAcIBdmFyaWFudF9pbnQ4X2ludDE2X2ludDMyX2ludDY0X3VpbnQ4X3VpbnQxNl91aW50MzJfdWludDY0X2Zsb2F0MzJfZmxvYXQ2NF9zdHJpbmdfSU5UOF9WRUNfSU5UMTZfVkVDX0lOVDMyX1ZFQ19JTlQ2NF9WRUNfVUlOVDhfVkVDX1VJTlQxNl9WRUNfVUlOVDMyX1ZFQ19VSU5UNjRfVkVDX0ZMT0FUX1ZFQ19ET1VCTEVfVkVDX1NUUklOR19WRUMWBGludDgFaW50MTYFaW50MzIFaW50NjQFdWludDgGdWludDE2BnVpbnQzMgZ1aW50NjQHZmxvYXQzMgdmbG9hdDY0BnN0cmluZwhJTlQ4X1ZFQwlJTlQxNl9WRUMJSU5UMzJfVkVDCUlOVDY0X1ZFQwlVSU5UOF9WRUMKVUlOVDE2X1ZFQwpVSU5UMzJfVkVDClVJTlQ2NF9WRUMJRkxPQVRfVkVDCkRPVUJMRV9WRUMKU1RSSU5HX1ZFQwA="
+  "DmVvc2lvOjphYmkvMS4yACkGYWN0aW9uAAQHYWNjb3VudARuYW1lBG5hbWUEbmFtZQ1hdXRob3JpemF0aW9uEnBlcm1pc3Npb25fbGV2ZWxbXQRkYXRhBWJ5dGVzC2FjdGlvbnByb29mAAQGYWN0aW9uBmFjdGlvbgdyZWNlaXB0CmFjdHJlY2VpcHQLcmV0dXJudmFsdWUFYnl0ZXMLYW1wcm9vZnBhdGgNY2hlY2tzdW0yNTZbXQphY3RyZWNlaXB0AAcIcmVjZWl2ZXIEbmFtZQphY3RfZGlnZXN0C2NoZWNrc3VtMjU2D2dsb2JhbF9zZXF1ZW5jZQZ1aW50NjQNcmVjdl9zZXF1ZW5jZQZ1aW50NjQNYXV0aF9zZXF1ZW5jZQlhdXRoc2VxW10NY29kZV9zZXF1ZW5jZQl2YXJ1aW50MzIMYWJpX3NlcXVlbmNlCXZhcnVpbnQzMgthbmNob3JibG9jawADBWJsb2NrDHNibG9ja2hlYWRlcgxhY3RpdmVfbm9kZXMIdWludDE2W10Kbm9kZV9jb3VudAZ1aW50NjQIYXNzZXRzX3MACAhhc3NldF9pZAZ1aW50NjQPY29sbGVjdGlvbl9uYW1lBG5hbWULc2NoZW1hX25hbWUEbmFtZQt0ZW1wbGF0ZV9pZAVpbnQzMglyYW1fcGF5ZXIEbmFtZQ1iYWNrZWRfdG9rZW5zB2Fzc2V0W10ZaW1tdXRhYmxlX3NlcmlhbGl6ZWRfZGF0YQVieXRlcxdtdXRhYmxlX3NlcmlhbGl6ZWRfZGF0YQVieXRlcwdhdXRoc2VxAAIHYWNjb3VudARuYW1lCHNlcXVlbmNlBnVpbnQ2NAtibG9ja2hlYWRlcgAJCXRpbWVzdGFtcBRibG9ja190aW1lc3RhbXBfdHlwZQhwcm9kdWNlcgRuYW1lCWNvbmZpcm1lZAZ1aW50MTYIcHJldmlvdXMLY2hlY2tzdW0yNTYRdHJhbnNhY3Rpb25fbXJvb3QLY2hlY2tzdW0yNTYMYWN0aW9uX21yb290C2NoZWNrc3VtMjU2EHNjaGVkdWxlX3ZlcnNpb24GdWludDMyDW5ld19wcm9kdWNlcnMScHJvZHVjZXJfc2NoZWR1bGU/EWhlYWRlcl9leHRlbnNpb25zE3BhaXJfdWludDE2X2J5dGVzW10HY2FuY2VsYQADBnByb3ZlcgRuYW1lCmJsb2NrcHJvb2YKaGVhdnlwcm9vZgthY3Rpb25wcm9vZgthY3Rpb25wcm9vZgdjYW5jZWxiAAMGcHJvdmVyBG5hbWUKYmxvY2twcm9vZgpsaWdodHByb29mC2FjdGlvbnByb29mC2FjdGlvbnByb29mB2Rpc2FibGUAAAZlbmFibGUAAAZnbG9iYWwABghjaGFpbl9pZAtjaGVja3N1bTI1Ng9icmlkZ2VfY29udHJhY3QEbmFtZQ9wYWlyZWRfY2hhaW5faWQLY2hlY2tzdW0yNTYYcGFpcmVkX3dyYXBsb2NrX2NvbnRyYWN0BG5hbWUVcGFpcmVkX3Rva2VuX2NvbnRyYWN0BG5hbWUHZW5hYmxlZARib29sCmhlYXZ5cHJvb2YABAhjaGFpbl9pZAtjaGVja3N1bTI1NgZoYXNoZXMNY2hlY2tzdW0yNTZbXQxibG9ja3RvcHJvdmULYW5jaG9yYmxvY2sIYmZ0cHJvb2YOc2Jsb2NraGVhZGVyW10IaHBzdHJ1Y3QAAgJpZAZ1aW50NjQCaHAKaGVhdnlwcm9vZgRpbml0AAQIY2hhaW5faWQLY2hlY2tzdW0yNTYPYnJpZGdlX2NvbnRyYWN0BG5hbWUPcGFpcmVkX2NoYWluX2lkC2NoZWNrc3VtMjU2GHBhaXJlZF93cmFwbG9ja19jb250cmFjdARuYW1lC2luaXRlbXBsYXRhAAMGcHJvdmVyBG5hbWUKYmxvY2twcm9vZgpoZWF2eXByb29mC2FjdGlvbnByb29mC2FjdGlvbnByb29mC2luaXRlbXBsYXRiAAMGcHJvdmVyBG5hbWUKYmxvY2twcm9vZgpsaWdodHByb29mC2FjdGlvbnByb29mC2FjdGlvbnByb29mC2luaXRzY2hlbWFhAAMGcHJvdmVyBG5hbWUKYmxvY2twcm9vZgpoZWF2eXByb29mC2FjdGlvbnByb29mC2FjdGlvbnByb29mC2luaXRzY2hlbWFiAAMGcHJvdmVyBG5hbWUKYmxvY2twcm9vZgpsaWdodHByb29mC2FjdGlvbnByb29mC2FjdGlvbnByb29mBmlzc3VlYQADBnByb3ZlcgRuYW1lCmJsb2NrcHJvb2YKaGVhdnlwcm9vZgthY3Rpb25wcm9vZgthY3Rpb25wcm9vZgZpc3N1ZWIAAwZwcm92ZXIEbmFtZQpibG9ja3Byb29mCmxpZ2h0cHJvb2YLYWN0aW9ucHJvb2YLYWN0aW9ucHJvb2YKbGlnaHRwcm9vZgAECGNoYWluX2lkC2NoZWNrc3VtMjU2BmhlYWRlcgtibG9ja2hlYWRlcgRyb290C2NoZWNrc3VtMjU2C2JtcHJvb2ZwYXRoDWNoZWNrc3VtMjU2W10IbHBzdHJ1Y3QAAgJpZAZ1aW50NjQCbHAKbGlnaHRwcm9vZgltZXRhbWFwcm0AARdmb3JlaWduX2NvbGxlY3Rpb25fbmFtZQRuYW1lCm1ldGFtYXBzZXQAAQltYXBfZW50cnkKbmZ0bWV0YW1hcAhuZnRpZG1hcAACDmxvY2FsX2Fzc2V0X2lkBnVpbnQ2NBBmb3JlaWduX2Fzc2V0X2lkBnVpbnQ2NAluZnRpZHhmZXIAAQluZnRpZHhmZXIKbmZ0aWR4ZmVycwpuZnRpZHhmZXJzAAMJYXNzZXRfaWRzCHVpbnQ2NFtdC2JlbmVmaWNpYXJ5BG5hbWUEbWVtbwZzdHJpbmcKbmZ0bWV0YW1hcAACF2ZvcmVpZ25fY29sbGVjdGlvbl9uYW1lBG5hbWUVbG9jYWxfY29sbGVjdGlvbl9uYW1lBG5hbWUHbmZ0eGZlcgAEBW93bmVyBG5hbWUGYXNzZXRzCmFzc2V0c19zW10LYmVuZWZpY2lhcnkEbmFtZQRtZW1vBnN0cmluZxFwYWlyX3VpbnQxNl9ieXRlcwACBWZpcnN0BnVpbnQxNgZzZWNvbmQFYnl0ZXMQcGVybWlzc2lvbl9sZXZlbAACBWFjdG9yBG5hbWUKcGVybWlzc2lvbgRuYW1lCXByb2Nlc3NlZAACAmlkBnVpbnQ2NA5yZWNlaXB0X2RpZ2VzdAtjaGVja3N1bTI1Ngxwcm9kdWNlcl9rZXkAAg1wcm9kdWNlcl9uYW1lBG5hbWURYmxvY2tfc2lnbmluZ19rZXkKcHVibGljX2tleRFwcm9kdWNlcl9zY2hlZHVsZQACB3ZlcnNpb24GdWludDMyCXByb2R1Y2Vycw5wcm9kdWNlcl9rZXlbXQxzYmxvY2toZWFkZXIABAZoZWFkZXILYmxvY2toZWFkZXITcHJvZHVjZXJfc2lnbmF0dXJlcwtzaWduYXR1cmVbXQ9wcmV2aW91c19ibXJvb3QLY2hlY2tzdW0yNTYLYm1wcm9vZnBhdGgIdWludDE2W10LdGVtcGxhdGVtYXAAAhNmb3JlaWduX3RlbXBsYXRlX2lkBWludDMyEWxvY2FsX3RlbXBsYXRlX2lkBWludDMyCXRlbXBtYXBybQACHWZvcmVpZ25fY29sbGVjdGlvbl9uYW1lX3Njb3BlBG5hbWUTZm9yZWlnbl90ZW1wbGF0ZV9pZAVpbnQzMgp0ZW1wbWFwc2V0AAIdZm9yZWlnbl9jb2xsZWN0aW9uX25hbWVfc2NvcGUEbmFtZQx0ZW1wbGF0ZV9tYXALdGVtcGxhdGVtYXAJdGVtcG5mdGlkAAMQZm9yZWlnbl9hc3NldF9pZAZ1aW50NjQKYmVuZmljaWFyeQRuYW1lBG1lbW8Gc3RyaW5nC3RlbXB0ZW1wdGJsAAMFaW5kZXgGdWludDY0E2ZvcmVpZ25fdGVtcGxhdGVfaWQFaW50MzIPY29sbGVjdGlvbl9uYW1lBG5hbWUQAAAAwESFpkEHY2FuY2VsYQAAAADgRIWmQQdjYW5jZWxiAAAAAEDFY7BLB2Rpc2FibGUAAAAAAKh4zFQGZW5hYmxlAAAAAAAAkN10BGluaXQAAEw2sUqV3XQLaW5pdGVtcGxhdGEAAE42sUqV3XQLaW5pdGVtcGxhdGIAAIyRqiGc3XQLaW5pdHNjaGVtYWEAAI6RqiGc3XQLaW5pdHNjaGVtYWIAAAAAABilMXYGaXNzdWVhAAAAAAAcpTF2Bmlzc3VlYgAAAJC3GmmykgltZXRhbWFwcm0AAEBWuBppspIKbWV0YW1hcHNldAAAALhq9eTymgluZnRpZHhmZXIAAACQtxpZpcoJdGVtcG1hcHJtAABAVrgaWaXKCnRlbXBtYXBzZXQACwAAAABEc2hkA2k2NAAABmdsb2JhbADAovRWv41qA2k2NAAACGhwc3RydWN0AMCi9NbcmIsDaTY0AAAIbHBzdHJ1Y3QAAADVyOTymgNpNjQAAAhuZnRpZG1hcAAAvmr15PKaA2k2NAAACm5mdGlkeGZlcnMAQDXSZCXzmgNpNjQAAApuZnRtZXRhbWFwAAAA4KrV85oDaTY0AAAHbmZ0eGZlcgAASApjheitA2k2NAAACXByb2Nlc3NlZACqkSqbWKXKA2k2NAAAC3RlbXBsYXRlbWFwAABILq9ZpcoDaTY0AAAJdGVtcG5mdGlkAOLJVapcpcoDaTY0AAALdGVtcHRlbXB0YmwAAAAAAA=="
 )
 export const abi = ABI.from(abiBlob)
 export namespace Types {
-  @Variant.type(
-    "variant_int8_int16_int32_int64_uint8_uint16_uint32_uint64_float32_float64_string_INT8_VEC_INT16_VEC_INT32_VEC_INT64_VEC_UINT8_VEC_UINT16_VEC_UINT32_VEC_UINT64_VEC_FLOAT_VEC_DOUBLE_VEC_STRING_VEC",
-    [
-      Int8,
-      Int16,
-      Int32,
-      Int64,
-      UInt8,
-      UInt16,
-      UInt32,
-      UInt64,
-      Float32,
-      Float64,
-      "string",
-      Bytes,
-      { type: Int16, array: true },
-      { type: Int32, array: true },
-      { type: Int64, array: true },
-      Bytes,
-      { type: UInt16, array: true },
-      { type: UInt32, array: true },
-      { type: UInt64, array: true },
-      { type: Float32, array: true },
-      { type: Float64, array: true },
-      "string[]"
-    ]
-  )
-  export class variant_int8_int16_int32_int64_uint8_uint16_uint32_uint64_float32_float64_string_INT8_VEC_INT16_VEC_INT32_VEC_INT64_VEC_UINT8_VEC_UINT16_VEC_UINT32_VEC_UINT64_VEC_FLOAT_VEC_DOUBLE_VEC_STRING_VEC extends Variant {
-    declare value:| Int8
-    | Int16
-    | Int32
-    | Int64
-    | UInt8
-    | UInt16
-    | UInt32
-    | UInt64
-    | Float32
-    | Float64
-    | string
-    | Bytes
-    | Int16[]
-    | Int32[]
-    | Int64[]
-    | Bytes
-    | UInt16[]
-    | UInt32[]
-    | UInt64[]
-    | Float32[]
-    | Float64[]
-    | string[]
-  }
   @Struct.type("permission_level")
   export class permission_level extends Struct {
     @Struct.field(Name)
@@ -316,30 +258,6 @@ export namespace Types {
   }
   @Struct.type("disable")
   export class disable extends Struct {}
-  @Struct.type("pair_string_ATOMIC_ATTRIBUTE")
-  export class pair_string_ATOMIC_ATTRIBUTE extends Struct {
-    @Struct.field("string")
-      first!:string
-
-    @Struct.field(
-      variant_int8_int16_int32_int64_uint8_uint16_uint32_uint64_float32_float64_string_INT8_VEC_INT16_VEC_INT32_VEC_INT64_VEC_UINT8_VEC_UINT16_VEC_UINT32_VEC_UINT64_VEC_FLOAT_VEC_DOUBLE_VEC_STRING_VEC
-    )
-      second!:variant_int8_int16_int32_int64_uint8_uint16_uint32_uint64_float32_float64_string_INT8_VEC_INT16_VEC_INT32_VEC_INT64_VEC_UINT8_VEC_UINT16_VEC_UINT32_VEC_UINT64_VEC_FLOAT_VEC_DOUBLE_VEC_STRING_VEC
-  }
-  @Struct.type("emitemplates")
-  export class emitemplates extends Struct {
-    @Struct.field(Name)
-      collection_name!:Name
-
-    @Struct.field(Int32)
-      template_id!:Int32
-
-    @Struct.field(Name)
-      schema_name!:Name
-
-    @Struct.field(pair_string_ATOMIC_ATTRIBUTE, { array: true })
-      template_immutable_data!:pair_string_ATOMIC_ATTRIBUTE[]
-  }
   @Struct.type("enable")
   export class enable extends Struct {}
   @Struct.type("global")
@@ -383,6 +301,28 @@ export namespace Types {
 
     @Struct.field(Name)
       paired_wraplock_contract!:Name
+  }
+  @Struct.type("initemplata")
+  export class initemplata extends Struct {
+    @Struct.field(Name)
+      prover!:Name
+
+    @Struct.field(heavyproof)
+      blockproof!:heavyproof
+
+    @Struct.field(actionproof)
+      actionproof!:actionproof
+  }
+  @Struct.type("initemplatb")
+  export class initemplatb extends Struct {
+    @Struct.field(Name)
+      prover!:Name
+
+    @Struct.field(lightproof)
+      blockproof!:lightproof
+
+    @Struct.field(actionproof)
+      actionproof!:actionproof
   }
   @Struct.type("initschemaa")
   export class initschemaa extends Struct {
@@ -535,9 +475,19 @@ export namespace Types {
     @Struct.field("string")
       memo!:string
   }
+  @Struct.type("temptemptbl")
+  export class temptemptbl extends Struct {
+    @Struct.field(UInt64)
+      index!:UInt64
+
+    @Struct.field(Int32)
+      foreign_template_id!:Int32
+
+    @Struct.field(Name)
+      collection_name!:Name
+  }
 }
 export const TableMap = {
-  emitemplates: Types.emitemplates,
   global: Types.global,
   heavyproof: Types.hpstruct,
   lightproof: Types.lpstruct,
@@ -547,10 +497,10 @@ export const TableMap = {
   nftxfer: Types.nftxfer,
   processed: Types.processed,
   templatemap: Types.templatemap,
-  tempnftid: Types.tempnftid
+  tempnftid: Types.tempnftid,
+  temptemptbl: Types.temptemptbl
 }
 export interface TableTypes {
-  emitemplates:Types.emitemplates
   global:Types.global
   heavyproof:Types.hpstruct
   lightproof:Types.lpstruct
@@ -561,6 +511,7 @@ export interface TableTypes {
   processed:Types.processed
   templatemap:Types.templatemap
   tempnftid:Types.tempnftid
+  temptemptbl:Types.temptemptbl
 }
 export type RowType<T> = T extends keyof TableTypes ? TableTypes[T] : any
 export type TableNames = keyof TableTypes
@@ -673,6 +624,16 @@ export namespace ActionParams {
     paired_chain_id:Checksum256Type
     paired_wraplock_contract:NameType
   }
+  export interface initemplata {
+    prover:NameType
+    blockproof:Type.heavyproof
+    actionproof:Type.actionproof
+  }
+  export interface initemplatb {
+    prover:NameType
+    blockproof:Type.lightproof
+    actionproof:Type.actionproof
+  }
   export interface initschemaa {
     prover:NameType
     blockproof:Type.heavyproof
@@ -717,6 +678,8 @@ export interface ActionNameParams {
   disable:ActionParams.disable
   enable:ActionParams.enable
   init:ActionParams.init
+  initemplata:ActionParams.initemplata
+  initemplatb:ActionParams.initemplatb
   initschemaa:ActionParams.initschemaa
   initschemab:ActionParams.initschemab
   issuea:ActionParams.issuea

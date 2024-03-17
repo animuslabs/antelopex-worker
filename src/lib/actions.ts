@@ -27,7 +27,13 @@ export const actions = {
       createAct("initschemaa", WrapToken.initschemaa.from({ ...data, prover: getConfig(chain).worker.account }), contract, chain),
     initschemaB: (
       data:{ blockproof:Lightproof, actionProof:Actionproof }, contract:NameType, chain:ChainKey) =>
-      createAct("initschemab", WrapToken.initschemab.from({ ...data, prover: getConfig(chain).worker.account }), contract, chain)
+      createAct("initschemab", WrapToken.initschemab.from({ ...data, prover: getConfig(chain).worker.account }), contract, chain),
+    initTemplateA: (
+      data:{ blockProof:Heavyproof, actionProof:Actionproof }, contract:NameType, chain:ChainKey) =>
+      createAct("initemplata", WrapToken.initemplata.from({ ...data, prover: getConfig(chain).worker.account }), contract, chain),
+    initTemplateB: (
+      data:{ blockproof:Lightproof, actionProof:Actionproof }, contract:NameType, chain:ChainKey) =>
+      createAct("initemplatb", WrapToken.initemplatb.from({ ...data, prover: getConfig(chain).worker.account }), contract, chain)
   },
   lockToken: {
     withdrawA: (

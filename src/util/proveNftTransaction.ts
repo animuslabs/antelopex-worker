@@ -1,13 +1,13 @@
 import { Action } from "@greymass/eosio"
 import { getChainClient } from "lib/eosio"
-import { findAction, getProof, makeEmitSchemaProveAction, makeNftIdXferProveAction, makeNftXferProveAction, makeXferProveAction } from "lib/ibcUtil"
+import { findAction, getProof, makeEmitSchemaProveAction, makeEmitTemplateProveAction, makeNftIdXferProveAction, makeNftXferProveAction, makeXferProveAction } from "lib/ibcUtil"
 import logger from "lib/logger"
 import { ProofRequestType } from "lib/types/ibc.types"
 import { throwErr } from "lib/utils"
 const log = logger.getLogger("test")
 
-const txid = "a346d30660aaae92ac91ad29e272375aa02828ab67ed4de654a772559aee3d14"
-const blockNum = 362258481
+const txid = "f5fff7e6072f403d789031fe76b1d0276e3261e93da14afcab504ee7a02bed89"
+const blockNum = 362272326
 let proofType:ProofRequestType = "heavyProof"
 const chains = {
   from: getChainClient("eos"),
@@ -37,6 +37,7 @@ try {
   else if (actionName == "nftidxfer") action = await makeNftIdXferProveAction(chains.from, chains.to, data, proof, proofType, block_merkle_root)
   else if (actionName == "nftidxfer") action = await makeNftIdXferProveAction(chains.from, chains.to, data, proof, proofType, block_merkle_root)
   else if (actionName == "emitschema") action = await makeEmitSchemaProveAction(chains.from, chains.to, data, proof, proofType, block_merkle_root)
+  else if (actionName == "emittemplate") action = await makeEmitTemplateProveAction(chains.from, chains.to, data, proof, proofType, block_merkle_root)
   else throwErr("can't make prove action,invalid action name")
   console.log(JSON.stringify(action, null, 2))
   const result = await chains.to.sendAction(action)

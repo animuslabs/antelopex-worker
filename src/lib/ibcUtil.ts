@@ -236,6 +236,25 @@ export async function makeEmitSchemaProveAction(fromChain:ChainClient, toChain:C
 
   return act
 }
+export async function makeEmitTemplateProveAction(fromChain:ChainClient, toChain:ChainClient, requestData:GetProofQuery, proofData:ProofData, type:ProofRequestType = "heavyProof", block_merkle_root?:string) {
+  const data = prepareProofData(requestData, proofData, type, block_merkle_root)
+  console.log("data:", data)
+
+  let act:Action
+  let fromChainName:string = fromChain.name
+  if (fromChainName === "tlos") fromChainName = "telos"
+
+  const nativeGlobal = (await fromChain.getTableRows({ code: requestData.action.account, table: "global", limit: 1, type: WrapLock.global as any })) as WrapLock.global[]
+  const global = nativeGlobal[0]
+  if (!global) throwErr("Native global data row not found")
+
+  if (type == "lightProof") {
+    data.blockproof.root = block_merkle_root
+    act = actions.wrapToken.initTemplateB(data, global.paired_wrapnft_contract.toString(), toChain.name)
+  } else act = actions.wrapToken.initTemplateB(data, global.paired_wrapnft_contract.toString(), toChain.name)
+
+  return act
+}
 
 async function getChainLastProved(chain:ChainClient) {
   const res = await chain.getTableRows({
