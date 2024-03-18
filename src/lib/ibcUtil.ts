@@ -1,10 +1,10 @@
-import { Action, Asset, Checksum256, NameType, UInt32, UInt64 } from "@greymass/eosio"
+import { Action, Asset, Checksum256, Name, NameType, UInt32, UInt64 } from "@greymass/eosio"
 import fs from "fs-extra"
 import { actions } from "lib/actions"
 import { ChainClient, getChainClient } from "lib/eosio"
 import { HypAction, getHypClient, hypClients } from "lib/hyp"
 import { getIBCToken } from "lib/ibcTokens"
-import { ProofData, ActionReceipt, ChainKey, ProofDataResult, GetProofQuery, ProofRequestType, ProofQuery } from "lib/types/ibc.types"
+import { ProofData, ActionReceipt, ChainKey, ProofDataResult, GetProofQuery, ProofRequestType, ProofQuery, ibcActionNames, IBCActionNames } from "lib/types/ibc.types"
 import { Emitxfer } from "lib/types/wraplock.types"
 import { throwErr, toObject } from "lib/utils"
 import WebSocket from "ws"
@@ -16,8 +16,17 @@ import { Types as WrapToken } from "lib/types/wraptoken.nft.types"
 import { Types as WrapLock } from "lib/types/wraplock.nft.types"
 const log = logger.getLogger("ibcUtil")
 
+export async function findProofType(fromChain:ChainClient, toChain:ChainClient, orderBlockNum:number):Promise<{ proofType:ProofRequestType, block_merkle_root?:string, lastProvenBlock:number }> {
+  const lastProvenBlockRows = await toChain.getTableRowsJson({ reverse: true, json: true, code: "ibc.prove", scope: Name.from(fromChain.name), table: "lastproofs", limit: 1 })
+  const lastBlockProvedRes = lastProvenBlockRows[0]
+  let proofType:ProofRequestType
+  if (!lastBlockProvedRes) proofType = "heavyProof"
+  else if (lastBlockProvedRes.block_height > orderBlockNum) proofType = "lightProof"
+  else proofType = "heavyProof"
+  return { proofType, block_merkle_root: lastBlockProvedRes.block_merkle_root || undefined, lastProvenBlock: lastBlockProvedRes.block_height.toNumber() }
+}
+
 export async function findAction(chain:ChainClient, txId:string, blockNum:number):Promise<GetProofQuery> {
-  let actionNames = ["emitxfer", "emitnftxfer", "nftidxfer", "emitschema"]
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(chain.getProofSocket())
     ws.addEventListener("open", (event) => {
@@ -43,6 +52,7 @@ export async function findAction(chain:ChainClient, txId:string, blockNum:number
       // loop through the actionNames to find the one that exists
       let actionName:string | undefined
       let action_data
+      const actionNames = [...ibcActionNames]
       while (!action_data && actionNames.length > 0) {
         actionName = actionNames.shift()
         if (!actionName) return reject(new Error("No valid actionName found"))
@@ -57,7 +67,7 @@ export async function findAction(chain:ChainClient, txId:string, blockNum:number
       const actionData = Action.from(action_data.action)
       const actionReceipt = action_data.receipt
       const action_receipt_digest = action_data.action_receipt_digest
-      resolve({ action: actionData, action_receipt_digest, block_to_prove: blockNum, actionReceipt })
+      resolve({ action: actionData, actionName: actionData.name.toString() as IBCActionNames, action_receipt_digest, block_to_prove: blockNum, actionReceipt })
     })
   })
 }
@@ -107,20 +117,8 @@ export async function getDestinationChain(tknRow:IbcToken, fromChainName:ChainKe
 }
 
 export async function makeXferProveAction(fromChain:ChainClient, toChain:ChainClient, requestData:GetProofQuery, proofData:ProofData, type:ProofRequestType = "heavyProof", block_merkle_root?:string) {
-  if (type === "lightProof" && !block_merkle_root) throwErr("Block merkle root required for lightProof")
+  const data = prepareProofData(requestData, proofData, type, block_merkle_root)
   const sym = requestData.action.decodeData(Emitxfer).xfer.quantity.quantity.symbol
-  if (!proofData.actionproof) throwErr("No action proof found in proofData")
-  let auth_sequence = []
-  for (let authSequence of requestData.actionReceipt.auth_sequence) auth_sequence.push({ account: authSequence[0], sequence: authSequence[1] })
-  requestData.actionReceipt.auth_sequence = auth_sequence
-  let data:any = { ...proofData }
-  data.actionproof = {
-    ...proofData.actionproof,
-    action: toObject(requestData.action),
-    receipt: { ...requestData.actionReceipt }
-  }
-  console.log("data:", data)
-
   let act:Action
   const tknRow = await getIBCToken(fromChain, sym)
   let fromChainName:string = fromChain.name
@@ -141,12 +139,8 @@ export async function makeXferProveAction(fromChain:ChainClient, toChain:ChainCl
       act = actions.lockToken.withdrawB(data, wlContract.contract, tknRow.native_chain.toString() as ChainKey)
     } else act = actions.lockToken.withdrawA(data, wlContract.contract, tknRow.native_chain.toString() as ChainKey)
   } else {
-    // const wlConfig = tknRow.wraplock_contracts.find(el => el.contract.toString() === contract)
-    // if (!wlConfig) throwErr("No valid wraplock contract for sym contract", sym, contract)
-    // destinationChain = getChainClient(wlConfig.destination_chain.toString() as ChainKey)
     const destinationTokenRow = await getIBCToken(toChain, sym)
-    log.debug(toChain.name, toObject(destinationTokenRow)) // DEBUG log
-    // if (type == "lightProof") proofData. = lastBlockProvedRes.block_merkle_root
+    log.debug(toChain.name, toObject(destinationTokenRow))
     if (type == "lightProof") {
       data.blockproof.root = block_merkle_root
       act = actions.wrapToken.issueB(data, destinationTokenRow.token_contract, toChain.name)
@@ -155,18 +149,7 @@ export async function makeXferProveAction(fromChain:ChainClient, toChain:ChainCl
   return act
 }
 export async function makeNftXferProveAction(fromChain:ChainClient, toChain:ChainClient, requestData:GetProofQuery, proofData:ProofData, type:ProofRequestType = "heavyProof", block_merkle_root?:string) {
-  if (type === "lightProof" && !block_merkle_root) throwErr("Block merkle root required for lightProof")
-  if (!proofData.actionproof) throwErr("No action proof found in proofData")
-  let auth_sequence = []
-  for (let authSequence of requestData.actionReceipt.auth_sequence) auth_sequence.push({ account: authSequence[0], sequence: authSequence[1] })
-  requestData.actionReceipt.auth_sequence = auth_sequence
-  let data:any = { ...proofData }
-  data.actionproof = {
-    ...proofData.actionproof,
-    action: toObject(requestData.action),
-    receipt: { ...requestData.actionReceipt }
-  }
-  console.log("data:", data)
+  const data = prepareProofData(requestData, proofData, type, block_merkle_root)
 
   let act:Action
   // const tknRow = await getIBCToken(fromChain, sym)
@@ -183,20 +166,6 @@ export async function makeNftXferProveAction(fromChain:ChainClient, toChain:Chai
   } else act = actions.wrapToken.issueA(data, global.paired_wrapnft_contract.toString(), toChain.name)
 
   return act
-}
-function prepareProofData(requestData:GetProofQuery, proofData:ProofData, type:ProofRequestType = "heavyProof", block_merkle_root?:string) {
-  if (type === "lightProof" && !block_merkle_root) throwErr("Block merkle root required for lightProof")
-  if (!proofData.actionproof) throwErr("No action proof found in proofData")
-  let auth_sequence = []
-  for (let authSequence of requestData.actionReceipt.auth_sequence) auth_sequence.push({ account: authSequence[0], sequence: authSequence[1] })
-  requestData.actionReceipt.auth_sequence = auth_sequence
-  let data:any = { ...proofData }
-  data.actionproof = {
-    ...proofData.actionproof,
-    action: toObject(requestData.action),
-    receipt: { ...requestData.actionReceipt }
-  }
-  return data
 }
 export async function makeNftIdXferProveAction(fromChain:ChainClient, toChain:ChainClient, requestData:GetProofQuery, proofData:ProofData, type:ProofRequestType = "heavyProof", block_merkle_root?:string) {
   const data = prepareProofData(requestData, proofData, type, block_merkle_root)
@@ -254,6 +223,30 @@ export async function makeEmitTemplateProveAction(fromChain:ChainClient, toChain
   } else act = actions.wrapToken.initTemplateB(data, global.paired_wrapnft_contract.toString(), toChain.name)
 
   return act
+}
+function prepareProofData(requestData:GetProofQuery, proofData:ProofData, type:ProofRequestType = "heavyProof", block_merkle_root?:string) {
+  if (type === "lightProof" && !block_merkle_root) throwErr("Block merkle root required for lightProof")
+  if (!proofData.actionproof) throwErr("No action proof found in proofData")
+  let auth_sequence = []
+  for (let authSequence of requestData.actionReceipt.auth_sequence) auth_sequence.push({ account: authSequence[0], sequence: authSequence[1] })
+  requestData.actionReceipt.auth_sequence = auth_sequence
+  let data:any = { ...proofData }
+  data.actionproof = {
+    ...proofData.actionproof,
+    action: toObject(requestData.action),
+    receipt: { ...requestData.actionReceipt }
+  }
+  return data
+}
+export async function makeProofAction(actionName:IBCActionNames, fromChain:ChainClient, toChain:ChainClient, requestData:GetProofQuery, proofData:ProofData, proofType:ProofRequestType = "heavyProof", block_merkle_root?:string) {
+  let action:Action
+  if (actionName == "emitnftxfer") action = await makeNftXferProveAction(fromChain, toChain, requestData, proofData, proofType, block_merkle_root)
+  else if (actionName == "emitxfer") action = await makeXferProveAction(fromChain, toChain, requestData, proofData, proofType, block_merkle_root)
+  else if (actionName == "nftidxfer") action = await makeNftIdXferProveAction(fromChain, toChain, requestData, proofData, proofType, block_merkle_root)
+  else if (actionName == "emitschema") action = await makeEmitSchemaProveAction(fromChain, toChain, requestData, proofData, proofType, block_merkle_root)
+  else if (actionName == "emittemplate") action = await makeEmitTemplateProveAction(fromChain, toChain, requestData, proofData, proofType, block_merkle_root)
+  else throwErr("can't make prove action,invalid action name:", actionName)
+  return action
 }
 
 async function getChainLastProved(chain:ChainClient) {

@@ -6,16 +6,17 @@ import { getIBCToken } from "lib/ibcTokens"
 import { getDestinationChain, findAction, getProof, makeXferProveAction } from "lib/ibcUtil"
 import logger from "lib/logger"
 import { IbcOrder, IbcSpecialOrder } from "lib/types/antelopex.system.types"
-import { ProofData, ProofRequestType } from "lib/types/ibc.types"
+import { GetProofQuery, ProofData, ProofRequestType } from "lib/types/ibc.types"
 import { Emitxfer } from "lib/types/wraplock.types"
 import { throwErr } from "lib/utils"
-const log = logger.getLogger("handleSpecialOrder")
+const log = logger.getLogger("handleOrder")
 
-export async function handleOrder(order:IbcSpecialOrder|IbcOrder, client:ChainClient) {
+export async function handleOrder(order:IbcSpecialOrder|IbcOrder, client:ChainClient, data?:GetProofQuery) {
   const specialOrder = "id" in order
   try {
-    log.debug(`Processing special order: ${order.trxid.toString()}`) // DEBUG log
-    const data = await findAction(client, order.trxid.toString(), order.block_num.toNumber())
+    log.debug(`Processing special order: ${order.trxid.toString()}`)
+    if (!data) data = await findAction(client, order.trxid.toString(), order.block_num.toNumber())
+    if (data.actionName !== "emitxfer") return log.error("Not an emitxfer action, skipping...")
     const sym = data.action.decodeData(Emitxfer).xfer.quantity.quantity.symbol
     const tknRow = await getIBCToken(client, sym)
     let toChain:ChainClient = await getDestinationChain(tknRow, client.name, data.action.account)

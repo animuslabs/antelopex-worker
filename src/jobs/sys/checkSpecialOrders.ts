@@ -1,6 +1,7 @@
 import db from "lib/db"
 import { chainClients } from "lib/eosio"
 import { handleOrder } from "lib/handleOrder"
+import { handleAnyOrder } from "lib/ibc"
 import { prepareSpecialOrders } from "lib/prepareSpecialOrders"
 import { sleep, sleepErr } from "lib/utils"
 import ms from "ms"
@@ -8,7 +9,7 @@ import ms from "ms"
 async function checkOrders() {
   for (const client of Object.values(chainClients)) {
     const filteredOrders = await prepareSpecialOrders(client)
-    for (const order of filteredOrders) await handleOrder(order, client)
+    for (const order of filteredOrders) await handleAnyOrder(order, client)
   }
 }
 

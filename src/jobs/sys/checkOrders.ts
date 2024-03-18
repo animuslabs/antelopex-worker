@@ -1,14 +1,18 @@
 import db from "lib/db"
-import { chainClients } from "lib/eosio"
+import { ChainClient, chainClients } from "lib/eosio"
+import { handleNftOrder } from "lib/handleNftOrder"
 import { handleOrder } from "lib/handleOrder"
+import { handleAnyOrder } from "lib/ibc"
+import { findAction } from "lib/ibcUtil"
 import { prepareOrders } from "lib/prepareOrders"
+import { IbcOrder } from "lib/types/antelopex.system.types"
 import { sleep, sleepErr } from "lib/utils"
 import ms from "ms"
 
 async function checkOrders() {
   for (const client of Object.values(chainClients)) {
     const filteredOrders = await prepareOrders(client)
-    for (const order of filteredOrders) await handleOrder(order, client)
+    for (const order of filteredOrders) await handleAnyOrder(order, client)
   }
 }
 

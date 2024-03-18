@@ -6,7 +6,12 @@ import { Withdrawa, Withdrawb } from "lib/types/wraplock.types"
 import { Issuea, Issueb, Retire } from "lib/types/wraptoken.types"
 import { Types as WrapToken } from "lib/types/wraptoken.nft.types"
 import { Types as WrapLock } from "lib/types/wraplock.nft.types"
-
+import { ChainClient, DoActionResponse } from "lib/eosio"
+import { IbcOrder, IbcSpecialOrder } from "lib/types/antelopex.system.types"
+import { throwErr } from "lib/utils"
+import logger from "lib/logger"
+import { UpdateOrderError, UpdateSpecialOrderError, orderRelayed, specialOrderRelayed } from "lib/dbHelpers"
+const log = logger.getLogger("actions")
 
 function createAct(name:string, data:Record<string, any> = {}, account:NameType, chain:ChainKey) {
   const config = getConfig(chain)
@@ -51,6 +56,17 @@ export const actions = {
 
 }
 
-// export const actions = {
-//   sys: sysActions
-// }
+export async function handleTrxResult(result:DoActionResponse, specialOrder:boolean, order:IbcSpecialOrder|IbcOrder, toChain:ChainClient) {
+  const receipt = result.receipts[0]
+  if (!receipt) {
+    const error = result.errors[0]?.error
+    if (!error) throwErr("Receipt and error fields missing")
+    log.error(`Error for order ${order.trxid.toString()}: ${error}`)
+    specialOrder ? await UpdateSpecialOrderError(order as IbcSpecialOrder, new Error(error)) : await UpdateOrderError(order, new Error(error))
+    return
+  } else {
+    const txid = receipt.receipt.id
+    log.debug(`Order ${order.trxid.toString()} relayed with transaction ID: ${txid}`) // DEBUG log
+    specialOrder ? await specialOrderRelayed(order as IbcSpecialOrder, txid, toChain.name) : await orderRelayed(order, txid, toChain.name)
+  }
+}

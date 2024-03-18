@@ -93,10 +93,14 @@ export interface ActionReceipt {
 }
 
 export type ProofRequestType = "heavyProof" | "lightProof"
+export const ibcActionNames = ["emitxfer", "emitnftxfer", "nftidxfer", "emitschema", "emittemplate"] as const
+export type IBCActionNames = typeof ibcActionNames[number]
+export type IBCAction = Omit<Action, "name"> & {name:IBCActionNames}
 
 export interface TrxDetails {actions:HypAction<unknown>[], blockNum:number, txid:string}
 
 export interface XferType {owner:string, quantity:{quantity:string, contract:string}, beneficiary:string}
 export interface EmitXferAction { data:{ xfer:XferType }, account:string, authorization:{actor:string, premission:string}[] }
-export interface GetProofQuery { block_to_prove:number, action:Action, action_receipt_digest:string, actionReceipt:ActionReceipt}
+export interface GetProofQuery { block_to_prove:number, action:Action, actionName:IBCActionNames, action_receipt_digest:string, actionReceipt:ActionReceipt}
 export interface ProofQuery {block_to_prove:number, last_proven_block?:number, type:ProofRequestType, action_receipt:ActionReceipt, action_receipt_digest?:string}
+

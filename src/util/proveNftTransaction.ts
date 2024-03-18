@@ -1,6 +1,6 @@
 import { Action } from "@greymass/eosio"
 import { getChainClient } from "lib/eosio"
-import { findAction, getProof, makeEmitSchemaProveAction, makeEmitTemplateProveAction, makeNftIdXferProveAction, makeNftXferProveAction, makeXferProveAction } from "lib/ibcUtil"
+import { findAction, getProof, makeEmitSchemaProveAction, makeEmitTemplateProveAction, makeNftIdXferProveAction, makeNftXferProveAction, makeProofAction, makeXferProveAction } from "lib/ibcUtil"
 import logger from "lib/logger"
 import { ProofRequestType } from "lib/types/ibc.types"
 import { throwErr } from "lib/utils"
@@ -28,18 +28,11 @@ if (proofType as ProofRequestType == "lightProof") {
 
 try {
   const data = await findAction(chains.from, txid, blockNum)
-  console.log(lastProvenBlock)
+  // console.log(lastProvenBlock)
   const proof = await getProof(chains.from, data, lastProvenBlock)
-  const actionName = data.action.name.toString()
-  let action:Action
-  if (actionName == "emitnftxfer") action = await makeNftXferProveAction(chains.from, chains.to, data, proof, proofType, block_merkle_root)
-  else if (actionName == "emitxfer") action = await makeXferProveAction(chains.from, chains.to, data, proof, proofType, block_merkle_root)
-  else if (actionName == "nftidxfer") action = await makeNftIdXferProveAction(chains.from, chains.to, data, proof, proofType, block_merkle_root)
-  else if (actionName == "nftidxfer") action = await makeNftIdXferProveAction(chains.from, chains.to, data, proof, proofType, block_merkle_root)
-  else if (actionName == "emitschema") action = await makeEmitSchemaProveAction(chains.from, chains.to, data, proof, proofType, block_merkle_root)
-  else if (actionName == "emittemplate") action = await makeEmitTemplateProveAction(chains.from, chains.to, data, proof, proofType, block_merkle_root)
-  else throwErr("can't make prove action,invalid action name")
-  console.log(JSON.stringify(action, null, 2))
+  const actionName = data.actionName
+  let action = await makeProofAction(actionName, chains.from, chains.to, data, proof, proofType, block_merkle_root)
+  // console.log(JSON.stringify(action, null, 2))
   const result = await chains.to.sendAction(action)
   console.log(result)
 } catch (error) {
