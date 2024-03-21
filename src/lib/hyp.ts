@@ -71,7 +71,7 @@ export class HyperionClient {
       return result as GetTransaction<unknown>
     } catch (error:any) {
       log.error(hyp.endpoint, "retry:", retry, JSON.stringify(error, null, 2))
-      await sleep(ms("1s"))
+      await sleep(ms("10s"))
       return this.getTrx(trxid, retry += 1)
     }
   }

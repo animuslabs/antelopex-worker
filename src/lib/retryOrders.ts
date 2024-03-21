@@ -4,6 +4,7 @@ import db from "lib/db"
 import { newIBCOrder } from "lib/dbHelpers"
 import { ChainClient, chainClients } from "lib/eosio"
 import { handleOrder } from "lib/handleOrder"
+import { handleAnyOrder } from "lib/ibc"
 import logger from "lib/logger"
 import { IbcOrder, IbcSpecialOrder } from "lib/types/antelopex.system.types"
 import { sleep, sleepErr } from "lib/utils"
@@ -47,6 +48,6 @@ export async function retryOrders(client:ChainClient, specialOrders:boolean = fa
   })
   log.debug(`retrying ${retryOrders.length} orders for client: ${client.name}`) // DEBUG log
   log.debug(`${client.config.chain.toUpperCase()} - New orders found: ${filteredOrders.length}`) // DEBUG log
-  for (const order of filteredOrders) await handleOrder(order, client)
+  for (const order of filteredOrders) await handleAnyOrder(order, client)
 }
 

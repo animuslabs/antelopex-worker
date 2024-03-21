@@ -23,7 +23,8 @@ export async function findProofType(fromChain:ChainClient, toChain:ChainClient, 
   if (!lastBlockProvedRes) proofType = "heavyProof"
   else if (lastBlockProvedRes.block_height > orderBlockNum) proofType = "lightProof"
   else proofType = "heavyProof"
-  return { proofType, block_merkle_root: lastBlockProvedRes.block_merkle_root || undefined, lastProvenBlock: lastBlockProvedRes.block_height.toNumber() }
+  log.info(lastBlockProvedRes)
+  return { proofType, block_merkle_root: lastBlockProvedRes.block_merkle_root || undefined, lastProvenBlock: lastBlockProvedRes.block_height }
 }
 
 export async function findAction(chain:ChainClient, txId:string, blockNum:number):Promise<GetProofQuery> {
@@ -75,6 +76,7 @@ export async function findAction(chain:ChainClient, txId:string, blockNum:number
 
 export async function getProof(chain:ChainClient, queryData:GetProofQuery, last_proven_block?:number):Promise<ProofData> {
   return new Promise((resolve, reject) => {
+    setTimeout(() => reject(new Error("Timeout")), 10000)
     const ws = new WebSocket(chain.getProofSocket())
     const type = last_proven_block ? "lightProof" : "heavyProof" // if we don't have last_proven_block then request heavy proof
     ws.addEventListener("open", (event) => {
@@ -220,7 +222,7 @@ export async function makeEmitTemplateProveAction(fromChain:ChainClient, toChain
   if (type == "lightProof") {
     data.blockproof.root = block_merkle_root
     act = actions.wrapToken.initTemplateB(data, global.paired_wrapnft_contract.toString(), toChain.name)
-  } else act = actions.wrapToken.initTemplateB(data, global.paired_wrapnft_contract.toString(), toChain.name)
+  } else act = actions.wrapToken.initTemplateA(data, global.paired_wrapnft_contract.toString(), toChain.name)
 
   return act
 }

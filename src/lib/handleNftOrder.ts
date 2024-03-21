@@ -24,7 +24,7 @@ export async function handleNftOrder(order:IbcSpecialOrder|IbcOrder, fromChain:C
     const proof = await getProof(fromChain, data, proofType == "lightProof" ? lastProvenBlock : undefined)
     let action = await makeProofAction(data.actionName, fromChain, toChain, data, proof, proofType, block_merkle_root)
     const result = await toChain.sendAction(action)
-    log.debug(`Result for order ${order.trxid.toString()}: ${JSON.stringify(result)}`) // DEBUG log
+    // log.debug(`Result for order ${order.trxid.toString()}}`)
     if (!result) throwErr("Null result")
     await handleTrxResult(result, specialOrder, order, toChain)
   } catch (error:any) {
