@@ -10,7 +10,8 @@ async function init() {
 
 async function main() {
   console.log("checkOrders starting:", new Date().toLocaleString())
-  await Promise.race([init(), sleepErr(ms("3m"))]).catch(async() => {
+  await Promise.race([init(), sleepErr(ms("3m"))]).catch(async(err) => {
+    console.error(err)
     console.error("checkOrders Failed due to timeout:", new Date().toLocaleString())
     await db.$disconnect()
     process.kill(process.pid, "SIGTERM")

@@ -48,6 +48,7 @@ export async function findAction(chain:ChainClient, txId:string, blockNum:number
       if (res.type === "error") reject(new Error(res.error))
       if (res.type !== "getBlockActions") return
       ws.close()
+      console.log(res.txs)
       const action_receipt = res.txs.filter((t:any) => t[0].transactionId.toUpperCase() === txId.toUpperCase())
       if (action_receipt.length !== 1) return reject(new Error("Action receipt for trx with txId " + txId + " not found in block " + blockNum + " " + action_receipt))
       // loop through the actionNames to find the one that exists
@@ -65,6 +66,7 @@ export async function findAction(chain:ChainClient, txId:string, blockNum:number
       if (!action_data) return reject(new Error("Action not found in transaction: " + actionName))
       log.debug(action_data.action)
       if (!action_data.action.data) action_data.action.data = [0]
+      if (typeof action_data.action.data == "object") action_data.action.data = convertObjectToHex(action_data.action.data)
       const actionData = Action.from(action_data.action)
       const actionReceipt = action_data.receipt
       const action_receipt_digest = action_data.action_receipt_digest
@@ -72,7 +74,17 @@ export async function findAction(chain:ChainClient, txId:string, blockNum:number
     })
   })
 }
-
+function convertObjectToHex(dataObject: {[key: string]: number}): string {
+    const keys = Object.keys(dataObject).map(key => parseInt(key)).sort((a, b) => a - b);
+    let hexString = '';
+    for (const key of keys) {
+        const byte = dataObject[key];
+        if (byte !== undefined) {
+            hexString += byte.toString(16).padStart(2, '0');
+        }
+    }
+    return hexString;
+}
 
 export async function getProof(chain:ChainClient, queryData:GetProofQuery, last_proven_block?:number):Promise<ProofData> {
   return new Promise((resolve, reject) => {
