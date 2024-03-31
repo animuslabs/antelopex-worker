@@ -35,7 +35,7 @@ model SpecialOrder {
   createdAt        DateTime @id @default(now())
   blockNum         BigInt
   shouldRetry      Boolean  @default(true)
-  orderId          BigInt   @unique
+  orderId          BigInt
 
   @@index([originTxid])
   @@index([orderId])

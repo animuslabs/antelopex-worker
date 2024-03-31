@@ -74,21 +74,21 @@ export async function findAction(chain:ChainClient, txId:string, blockNum:number
     })
   })
 }
-function convertObjectToHex(dataObject: {[key: string]: number}): string {
-    const keys = Object.keys(dataObject).map(key => parseInt(key)).sort((a, b) => a - b);
-    let hexString = '';
-    for (const key of keys) {
-        const byte = dataObject[key];
-        if (byte !== undefined) {
-            hexString += byte.toString(16).padStart(2, '0');
-        }
+function convertObjectToHex(dataObject:{[key:string]:number}):string {
+  const keys = Object.keys(dataObject).map(key => parseInt(key)).sort((a, b) => a - b)
+  let hexString = ""
+  for (const key of keys) {
+    const byte = dataObject[key]
+    if (byte !== undefined) {
+      hexString += byte.toString(16).padStart(2, "0")
     }
-    return hexString;
+  }
+  return hexString
 }
 
 export async function getProof(chain:ChainClient, queryData:GetProofQuery, last_proven_block?:number):Promise<ProofData> {
   return new Promise((resolve, reject) => {
-    setTimeout(() => reject(new Error("Timeout")), 10000)
+    setTimeout(() => reject(new Error("Timeout")), 30000)
     const ws = new WebSocket(chain.getProofSocket())
     const type = last_proven_block ? "lightProof" : "heavyProof" // if we don't have last_proven_block then request heavy proof
     ws.addEventListener("open", (event) => {

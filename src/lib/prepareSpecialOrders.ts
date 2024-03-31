@@ -2,7 +2,7 @@ import db from "lib/db"
 import { UpdateOrderError, UpdateSpecialOrderError, addIBCOrderError, addIBCSpecialOrderError, newIBCOrder, newIBCSpecialOrder, orderRelayed } from "lib/dbHelpers"
 import { ChainClient, chainClients } from "lib/eosio"
 import { IbcOrder, IbcSpecialOrder } from "lib/types/antelopex.system.types"
-import { sleep, sleepErr, throwErr } from "lib/utils"
+import { sleep, sleepErr, throwErr, toObject } from "lib/utils"
 import ms from "ms"
 import logger from "lib/logger"
 import { getDestinationChain, findAction, getProof, makeXferProveAction } from "lib/ibcUtil"
@@ -56,6 +56,8 @@ export async function prepareSpecialOrders(client:ChainClient) {
       continue
     } else {
       log.debug(`New IBC Order for transaction ID: ${order.trxid.toString()}`) // DEBUG log
+      log.debug(toObject(order))
+      log.debug(typeof BigInt(order.id.value))
       await newIBCSpecialOrder(client.config.chain, order)
       filteredOrders.push(order)
     }
